@@ -1,0 +1,22 @@
+import { requirePermission } from '@/lib/permissions/session';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Card, CardHeader, CardTitle, Badge } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/field';
+
+export default async function AttendanceHistoryPage({ searchParams }: { searchParams: Promise<{ date?: string; class_id?: string; profile_id?: string }> }) {
+  const session = await requirePermission('view_attendance');
+  const supabase = await createServerSupabaseClient();
+  const { date = '', class_id: classId = '', profile_id: profileId = '' } = await searchParams;
+  const [{ data: classes }, { data: profiles }] = await Promise.all([
+    supabase.from('classes').select('id, name').eq('school_id', session.school!.id).order('name'),
+    supabase.from('profiles').select('id, full_name').eq('school_id', session.school!.id).order('full_name'),
+  ]);
+  let studentQuery = supabase.from('student_attendance').select('id, status, attendance_days!inner(attendance_date), students(first_name, last_name), classes(name)').eq('school_id', session.school!.id).order('created_at', { ascending: false }).limit(50);
+  let staffQuery = supabase.from('staff_attendance').select('id, signed_in_at, signed_out_at, attendance_days!inner(attendance_date), profiles(full_name)').eq('school_id', session.school!.id).order('created_at', { ascending: false }).limit(50);
+  if (date) { studentQuery = studentQuery.eq('attendance_days.attendance_date', date); staffQuery = staffQuery.eq('attendance_days.attendance_date', date); }
+  if (classId) studentQuery = studentQuery.eq('class_id', classId);
+  if (profileId) staffQuery = staffQuery.eq('profile_id', profileId);
+  const [{ data: studentHistory }, { data: staffHistory }] = await Promise.all([studentQuery, staffQuery]);
+  return <div className="space-y-6"><div><h2 className="text-xl font-semibold text-ink">Attendance history</h2><p className="help-text">Review past student registers and staff sign-in records.</p></div><Card><CardHeader><CardTitle>Filters</CardTitle></CardHeader><form className="grid gap-3 md:grid-cols-4"><Input type="date" name="date" defaultValue={date} /><Select name="class_id" defaultValue={classId}><option value="">All classes</option>{(classes ?? []).map((item: any) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select><Select name="profile_id" defaultValue={profileId}><option value="">All staff</option>{(profiles ?? []).map((profile: any) => <option key={profile.id} value={profile.id}>{profile.full_name}</option>)}</Select><button className="h-10 rounded-md bg-brand px-4 text-sm font-medium text-white" type="submit">Filter</button></form></Card><Card><CardHeader><CardTitle>Student attendance</CardTitle></CardHeader><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted"><th className="px-2 py-2">Student</th><th className="px-2 py-2">Class</th><th className="px-2 py-2">Date</th><th className="px-2 py-2">Status</th></tr></thead><tbody>{(studentHistory ?? []).map((record: any) => <tr key={record.id} className="border-b border-line"><td className="px-2 py-2">{record.students?.first_name} {record.students?.last_name}</td><td className="px-2 py-2">{record.classes?.name ?? '—'}</td><td className="px-2 py-2">{record.attendance_days?.attendance_date}</td><td className="px-2 py-2"><Badge variant={record.status === 'absent' ? 'warning' : record.status === 'late' ? 'neutral' : 'success'}>{record.status}</Badge></td></tr>)}</tbody></table></div></Card><Card><CardHeader><CardTitle>Staff attendance</CardTitle></CardHeader><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted"><th className="px-2 py-2">Staff member</th><th className="px-2 py-2">Date</th><th className="px-2 py-2">Signed in</th><th className="px-2 py-2">Signed out</th></tr></thead><tbody>{(staffHistory ?? []).map((record: any) => <tr key={record.id} className="border-b border-line"><td className="px-2 py-2">{record.profiles?.full_name ?? 'Staff member'}</td><td className="px-2 py-2">{record.attendance_days?.attendance_date}</td><td className="px-2 py-2">{record.signed_in_at ? new Date(record.signed_in_at).toLocaleTimeString() : '—'}</td><td className="px-2 py-2">{record.signed_out_at ? new Date(record.signed_out_at).toLocaleTimeString() : '—'}</td></tr>)}</tbody></table></div></Card></div>;
+}

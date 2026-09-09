@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Fraunces', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-paper text-ink font-sans;
+  }
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-brand;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-border bg-white shadow-card;
+  }
+  .label-text {
+    @apply text-sm font-medium text-ink-soft;
+  }
+  .help-text {
+    @apply text-sm text-muted;
+  }
+}
