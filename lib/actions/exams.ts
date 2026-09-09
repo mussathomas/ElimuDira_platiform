@@ -142,7 +142,7 @@ export async function processExamination(formData: FormData): Promise<ActionResu
   if (saveErrors.some(Boolean)) return { ok: false, error: `Unable to save student results: ${saveErrors.find(Boolean)}` };
   const rankingMethod = (snapshot.division?.ranking_method ?? 'aggregate') as 'aggregate' | 'total_marks' | 'average_mark';
   const sortColumn = rankingMethod === 'total_marks' ? 'total_marks' : rankingMethod === 'average_mark' ? 'average_mark' : 'aggregate';
-  const { data: rankedResults, error: rankedResultsError } = await supabase.from('student_exam_results').select('id, student_id, aggregate, total_marks, average_mark, overall_status').eq('school_id', session.school!.id).eq('examination_id', examinationId).not(sortColumn, 'is', null).order(sortColumn, { ascending: true, nullsFirst: false });
+  const { data: rankedResults, error: rankedResultsError } = await supabase.from('student_exam_results').select('id, student_id, aggregate, total_marks, average_mark, overall_status').eq('school_id', session.school!.id).eq('examination_id', examinationId).not(sortColumn, 'is', null).order(sortColumn, { ascending: false, nullsFirst: false });
   if (rankedResultsError) return { ok: false, error: `Results were calculated but positions could not be saved: ${rankedResultsError.message}` };
   const rankedStudentIds = (rankedResults ?? []).map((result) => result.student_id);
   const { data: rankedStudents, error: rankedStudentsError } = await supabase.from('students').select('id, class_id').eq('school_id', session.school!.id).in('id', rankedStudentIds);
@@ -154,13 +154,13 @@ export async function processExamination(formData: FormData): Promise<ActionResu
     resultsByClass.set(classId, [...(resultsByClass.get(classId) ?? []), result]);
   }
   for (const classResults of resultsByClass.values()) {
-    let previousAggregate: number | null = null;
+    let previousValue: number | null = null;
     let previousPosition = 0;
     for (const [index, result] of classResults.entries()) {
-      const aggregate = result.aggregate === null ? null : Number(result.aggregate);
-      const position = aggregate === null ? null : aggregate === previousAggregate ? previousPosition : index + 1;
+      const currentValue = result[sortColumn] === null ? null : Number(result[sortColumn]);
+      const position = currentValue === null ? null : currentValue === previousValue ? previousPosition : index + 1;
       if (position !== null) previousPosition = position;
-      previousAggregate = aggregate;
+      previousValue = currentValue;
       const { error } = await supabase.from('student_exam_results').update({ position, status: 'PUBLISHED' }).eq('id', result.id).eq('school_id', session.school!.id);
       if (error?.code === '42703' || error?.code === 'PGRST204') {
         const legacyPosition = await supabase.from('student_exam_results').update({ position }).eq('id', result.id).eq('school_id', session.school!.id);

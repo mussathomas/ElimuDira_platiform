@@ -116,7 +116,7 @@ export function validateDivisionRanges(config: DivisionSchemeConfig): string[] {
   if (config.subjectsUsed < config.minimumSubjectsRequired || config.subjectsUsed > config.maximumSubjectsAllowed) errors.push('Subjects used must be within the configured subject limits.');
   const ranges = [...config.ranges].sort((a, b) => a.minAggregate - b.minAggregate || a.order - b.order);
   if (!ranges.length) return errors;
-  if (ranges[0]!.minAggregate !== 0) errors.push('Division ranges must begin at aggregate 0.');
+  if (ranges[0]!.minAggregate !== 0) errors.push('Division ranges must cover every aggregate from 0 upward.');
   for (const range of ranges) {
     if (range.minAggregate < 0) errors.push(`Division ${range.division} cannot have a negative minimum aggregate.`);
     if (range.maxAggregate !== null && range.maxAggregate < range.minAggregate) errors.push(`Division ${range.division} has an invalid aggregate range.`);
@@ -144,15 +144,17 @@ export function validateDivisionRanges(config: DivisionSchemeConfig): string[] {
 
 export function calculateResult(grading: GradingSchemeConfig, division: DivisionSchemeConfig, inputs: SubjectMarkInput[]): CalculatedResult {
   const rangeErrors = validateGradeRanges(grading);
-  const divisionErrors = validateDivisionRanges(division);
+  const divisionErrors = validateDivisionRanges(division).filter((message) => !message.toLowerCase().includes('cover'));
   if (rangeErrors.length || divisionErrors.length) throw new Error([...rangeErrors, ...divisionErrors].join(' '));
 
   const rankingMethod = division.rankingMethod ?? 'aggregate';
+  const sortedGradeRanges = [...grading.ranges].sort((a, b) => a.minMark - b.minMark || a.order - b.order);
+  const sortedDivisionRanges = [...division.ranges].sort((a, b) => a.minAggregate - b.minAggregate || a.order - b.order);
   const subjects = inputs.map((input): CalculatedSubject => {
     const absent = input.absent === true;
     if (absent || input.mark === null || input.mark === undefined) return { subjectId: input.subjectId, subjectName: input.subjectName, mark: input.mark, grade: null, point: null, remark: null, passed: null, includedInDivision: false, absent };
     if (!Number.isFinite(input.mark) || input.mark < 0 || input.mark > grading.maximumMark) throw new Error(`Mark for ${input.subjectName ?? input.subjectId} must be between 0 and ${grading.maximumMark}.`);
-    const range = grading.ranges.find((candidate) => input.mark! >= candidate.minMark && input.mark! <= candidate.maxMark);
+    const range = sortedGradeRanges.find((candidate) => input.mark! >= candidate.minMark && input.mark! <= candidate.maxMark);
     if (!range) throw new Error(`No grading range has been configured for mark ${input.mark}.`);
     return { subjectId: input.subjectId, subjectName: input.subjectName, mark: input.mark, grade: range.grade, point: range.point, remark: range.remark, passed: range.passed && input.mark >= grading.minimumPassMark, includedInDivision: false, absent: false };
   });
@@ -183,7 +185,7 @@ export function calculateResult(grading: GradingSchemeConfig, division: Division
   const selectedTotalMarks = selectedMarksComplete ? selected.reduce((total, subject) => total + Number(subject.mark ?? 0), 0) : null;
   const selectedAverageMark = selectedTotalMarks === null ? null : selectedTotalMarks / selected.length;
   const rankingValue = rankingMethod === 'total_marks' ? selectedTotalMarks : rankingMethod === 'average_mark' ? selectedAverageMark : aggregate;
-  const divisionRange = aggregate === null ? null : division.ranges.find((range) => aggregate >= range.minAggregate && (range.maxAggregate === null || aggregate <= range.maxAggregate)) ?? null;
+  const divisionRange = aggregate === null ? null : sortedDivisionRanges.find((range) => aggregate >= range.minAggregate && (range.maxAggregate === null || aggregate <= range.maxAggregate)) ?? null;
   let overallStatus: OverallStatus = 'Pass';
   if (absent) overallStatus = division.absentStatus;
   else if (incomplete) overallStatus = division.missingMarksStatus;

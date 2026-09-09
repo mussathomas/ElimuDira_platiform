@@ -1,135 +1,577 @@
-import Link from 'next/link';
 import { requireGradingViewer } from '@/lib/permissions/session';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { ActionForm } from '@/components/ui/action-form';
 import { DeleteButton } from '@/components/ui/delete-button';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, Badge } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/field';
-import { GradingPreview } from '@/components/settings/grading-preview';
-import { addDivisionBand, addGradeBand, createDivisionRule, createGradingScale, deleteDivisionBand, deleteGradeBand, deleteDivisionRule, updateDivisionBand, updateDivisionRule, updateGradeBand, updateGradingScale, validateGradingScale } from '@/lib/actions/grading';
-import { assignExamScheme, createExaminationType, saveDivisionSubject, saveExamGradingConfig } from '@/lib/actions/grading-config';
+import { Button } from '@/components/ui/button';
+import { GradingPreview } from '@/components/grading/grading-preview';
+import {
+  createGradingScheme,
+  updateGradingScheme,
+  deleteGradingScheme,
+  addGradeRange,
+  updateGradeRange,
+  deleteGradeRange,
+  createDivisionRule,
+  updateDivisionRule,
+  deleteDivisionRule,
+  addDivisionRange,
+  updateDivisionRange,
+  deleteDivisionRange,
+  saveSubjectSelectionRule,
+} from '@/lib/actions/grading-settings';
 
-function Field({ label, name, children }: { label: string; name: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><label htmlFor={name} className="label-text">{label}</label>{children}</div>;
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="space-y-1 text-sm text-ink">
+      <span className="label-text">{label}</span>
+      {children}
+    </label>
+  );
 }
 
-function Checkbox({ name, checked, label }: { name: string; checked?: boolean; label: string }) {
-  return <label className="flex min-h-10 items-center gap-2 rounded-md border border-border px-3 text-sm"><input type="hidden" name={name} value="false" /><input type="checkbox" name={name} value="true" defaultChecked={checked} />{label}</label>;
+async function querySelectionRules(supabase: any) {
+  const { data, error } = await supabase
+    .from('subject_selection_rules')
+    .select('id, name, description, education_level_id, academic_year_id, subjects_considered, selection_method')
+    .eq('school_id', (await requireGradingViewer()).school!.id)
+    .order('created_at', { ascending: false });
+
+  if (error && (error.code === '42P01' || error.message?.includes('Could not find the table') || error.message?.includes('subject_selection_rules'))) {
+    return { data: [] };
+  }
+
+  return { data: data ?? [] };
 }
 
-function LevelPicker({ levels, selected }: { levels: any[]; selected: string }) {
-  return <div className="flex flex-wrap gap-2">{levels.map((level) => <Link key={level.id} href={`/dashboard/settings/grading?level=${level.id}`} className={`rounded-md border px-4 py-2 text-sm ${selected === level.id ? 'border-brand bg-brand text-white' : 'border-border text-ink'}`}>{level.name}</Link>)}</div>;
+async function querySelectionRuleItems(supabase: any, schoolId: string) {
+  const { data, error } = await supabase
+    .from('subject_selection_rule_items')
+    .select('id, rule_id, subject_id, item_type')
+    .eq('school_id', schoolId);
+
+  if (error && (error.code === '42P01' || error.message?.includes('Could not find the table') || error.message?.includes('subject_selection_rule_items'))) {
+    return { data: [] };
+  }
+
+  return { data: data ?? [] };
 }
 
-export default async function GradingSettingsPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
+export default async function GradingSettingsPage() {
   const session = await requireGradingViewer();
-  const params = await searchParams;
   const supabase = await createServerSupabaseClient();
-  const [{ data: levels }, { data: subjects }, { data: academicYear }, { data: examTypes }, { data: exams }] = await Promise.all([
-    supabase.from('education_levels').select('id, name').eq('school_id', session.school!.id).order('order_index'),
-    supabase.from('subjects').select('id, name').eq('school_id', session.school!.id).order('name'),
-    supabase.from('academic_years').select('id, name').eq('school_id', session.school!.id).eq('is_current', true).maybeSingle(),
-    supabase.from('examination_types').select('id, name, contributes_to_final_result, contributes_to_division').eq('school_id', session.school!.id).order('name'),
-    supabase.from('examinations').select('id, name, term, examination_type_id').eq('school_id', session.school!.id).order('created_at', { ascending: false }),
+
+  const [{ data: educationLevels }, { data: academicYears }, { data: subjects }, { data: schemes }, { data: divisionRules }, { data: selectionRules }] =
+    await Promise.all([
+      supabase.from('education_levels').select('id, name').eq('school_id', session.school!.id).order('order_index'),
+      supabase.from('academic_years').select('id, name').eq('school_id', session.school!.id).order('name', { ascending: false }),
+      supabase.from('subjects').select('id, name').eq('school_id', session.school!.id).order('name'),
+      supabase.from('grading_scales').select('id, name, description, education_level_id, academic_year_id, max_mark, minimum_pass_mark, status').eq('school_id', session.school!.id).order('created_at', { ascending: false }),
+      supabase.from('division_rules').select('id, name, description, education_level_id, academic_year_id, subjects_counted, minimum_subjects_required, maximum_subjects_allowed, selection_method, status').eq('school_id', session.school!.id).order('created_at', { ascending: false }),
+      querySelectionRules(supabase),
+    ]);
+
+  const activeScheme = (schemes ?? []).find((scheme: any) => scheme.status === 'active') ?? (schemes ?? [])[0] ?? null;
+  const schemeId = activeScheme?.id ?? '';
+
+  const [{ data: gradeRanges }, { data: divisionBands }, { data: ruleItems }] = await Promise.all([
+    supabase.from('grade_bands').select('id, grade_name, min_score, max_score, points, remark, passed, order_index').eq('grading_scale_id', schemeId).order('min_score', { ascending: true }),
+    supabase.from('division_bands').select('id, division_rule_id, division_name, min_points, max_points, description, passed, order_index').in('division_rule_id', (divisionRules ?? []).map((rule: any) => rule.id)).order('min_points', { ascending: true }),
+    querySelectionRuleItems(supabase, session.school!.id),
   ]);
-  const registeredLevels = levels ?? [];
-  const selectedLevel = registeredLevels.some((level: any) => level.id === params.level)
-    ? params.level!
-    : registeredLevels.find((level: any) => /o[- ]?level|a[- ]?level/i.test(level.name))?.id ?? registeredLevels[0]?.id ?? '';
-  const [{ data: scales }, { data: rules }] = await Promise.all([
-    supabase.from('grading_scales').select('id, name, description, education_level_id, academic_year_id, max_mark, minimum_pass_mark, coverage_required, status, grade_bands(id, grade_name, min_score, max_score, points, remark, passed, order_index)').eq('school_id', session.school!.id).eq('education_level_id', selectedLevel).eq('status', 'active').or(academicYear ? `academic_year_id.eq.${academicYear.id},academic_year_id.is.null` : 'academic_year_id.is.null').order('name'),
-    supabase.from('division_rules').select('id, name, description, education_level_id, academic_year_id, subjects_counted, minimum_subjects_required, maximum_subjects_allowed, selection_method, ranking_method, use_best_subjects, include_compulsory, auto_select_optional, include_subsidiary_subjects, allow_failed_subjects, compulsory_must_pass, failed_compulsory_fails_overall, division_zero_on_failure, minimum_passed_subjects, maximum_failed_subjects, division_bands(id, division_name, min_points, max_points, description, passed, order_index), compulsory_subjects(subject_id), excluded_division_subjects(subject_id)').eq('school_id', session.school!.id).eq('education_level_id', selectedLevel).eq('status', 'active').or(academicYear ? `academic_year_id.eq.${academicYear.id},academic_year_id.is.null` : 'academic_year_id.is.null').order('created_at'),
-  ]);
-  const activeScales = [...(scales ?? [])]
-    .sort((left: any, right: any) => {
-      const leftStamp = new Date(left.updated_at ?? left.created_at ?? 0).getTime();
-      const rightStamp = new Date(right.updated_at ?? right.created_at ?? 0).getTime();
-      return Number(right.academic_year_id === academicYear?.id) - Number(left.academic_year_id === academicYear?.id) || rightStamp - leftStamp;
-    });
-  const activeRules = [...(rules ?? [])]
-    .sort((left: any, right: any) => {
-      const leftStamp = new Date(left.updated_at ?? left.created_at ?? 0).getTime();
-      const rightStamp = new Date(right.updated_at ?? right.created_at ?? 0).getTime();
-      return Number(right.academic_year_id === academicYear?.id) - Number(left.academic_year_id === academicYear?.id) || rightStamp - leftStamp;
-    });
-  const levelName = registeredLevels.find((level: any) => level.id === selectedLevel)?.name ?? 'Registered schema';
-  const canManage = session.permissions.has('manage_grading_settings') || session.permissions.has('edit_settings');
-  const previewBands = (activeScales[0]?.grade_bands ?? []) as any[];
 
-  return <main className="space-y-6">
-    <header><h2 className="text-xl font-semibold text-ink">Settings / Grading</h2><p className="help-text mt-1">School: {session.school!.name} · Education Schema: {levelName} · Academic Year: {academicYear?.name ?? 'Not configured'}</p><p className="help-text mt-1">{canManage ? 'Configure the active rules used by Results and Report Cards.' : 'View the rules used by Results and Report Cards.'}</p></header>
+  const rulesById = new Map((selectionRules ?? []).map((rule: any) => [rule.id, rule]));
+  const ruleIdToSubjects = new Map<string, { subjectId: string; itemType: string }[]>();
+  for (const item of ruleItems ?? []) {
+    const current = ruleIdToSubjects.get(item.rule_id) ?? [];
+    current.push({ subjectId: item.subject_id, itemType: item.item_type });
+    ruleIdToSubjects.set(item.rule_id, current);
+  }
 
-    <Card><CardHeader><CardTitle>Registered education schema</CardTitle></CardHeader><p className="help-text mb-3">Configuration is loaded from the school&apos;s existing education-level records.</p><LevelPicker levels={registeredLevels} selected={selectedLevel} /><p className="mt-3 text-sm text-muted">Active schema: <strong>{levelName}</strong></p></Card>
+  const schoolSubjects = (subjects ?? []).map((subject: any) => ({
+    id: subject.id,
+    name: subject.name,
+  }));
 
-    <Card><CardHeader><CardTitle>Create grading scheme</CardTitle></CardHeader><p className="help-text mb-5">A grading scheme converts a mark into a grade, point, remark, and pass/fail result.</p><ActionForm action={createGradingScale} submitLabel="Create grading scheme" className="space-y-5"><div className="grid gap-4 md:grid-cols-2"><Field label="Scheme name" name="new-scale-name"><Input id="new-scale-name" name="name" placeholder={`${levelName} Grading`} required /></Field><Field label="Description" name="new-scale-description"><Input id="new-scale-description" name="description" placeholder="For example: final ${levelName} results" /></Field><Field label="Maximum mark" name="new-scale-max"><Input id="new-scale-max" name="max_mark" type="number" min="1" defaultValue="100" required /></Field><Field label="Minimum pass mark" name="new-scale-pass"><Input id="new-scale-pass" name="minimum_pass_mark" type="number" min="0" defaultValue="40" required /></Field></div><input type="hidden" name="education_level_id" value={selectedLevel} /><input type="hidden" name="academic_year_id" value={academicYear?.id ?? ''} /><Checkbox name="coverage_required" checked label="Require every mark from 0 to the maximum mark to be covered" /></ActionForm></Card>
+  return (
+    <div className="space-y-6">
+      <header className="space-y-1">
+        <h2 className="text-xl font-semibold text-ink">Grading</h2>
+        <p className="help-text">Configure grading schemes, grade ranges, division ranges, and subject selection rules for the school.</p>
+      </header>
 
-    <Card>
-      <CardHeader><CardTitle>Live grading preview</CardTitle></CardHeader>
-      <p className="help-text mb-4">Test the current grade logic before publishing results.</p>
-      {previewBands.length ? <GradingPreview bands={previewBands} /> : <p className="help-text">Add a grading scheme and grade bands to enable the preview.</p>}
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Grading schemes</CardTitle>
+          <Badge variant={activeScheme ? 'success' : 'neutral'}>{activeScheme ? activeScheme.name : 'No active scheme'}</Badge>
+        </CardHeader>
 
-    <Card>
-      <CardHeader><CardTitle>Create exam type</CardTitle></CardHeader>
-      <p className="help-text mb-5">Define the exam categories that use a grading scheme and division scheme.</p>
-      <ActionForm action={createExaminationType} submitLabel="Create exam type" className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Exam type name" name="new-type-name"><Input id="new-type-name" name="name" placeholder="End of Term" required /></Field>
-          <div className="flex items-end gap-3">
-            <Checkbox name="contributes_to_final_result" checked label="Counts in the final result" />
-            <Checkbox name="contributes_to_division" checked label="Affects division" />
+        <ActionForm action={createGradingScheme} submitLabel="Create scheme" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Scheme name">
+              <Input name="name" placeholder="O-Level Grading Scheme" required />
+            </Field>
+            <Field label="Education level">
+              <Select name="education_level_id" defaultValue="">
+                <option value="">Select level</option>
+                {(educationLevels ?? []).map((level: any) => (
+                  <option key={level.id} value={level.id}>{level.name}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Maximum marks">
+              <Input name="max_mark" type="number" min={1} defaultValue={100} required />
+            </Field>
+            <Field label="Academic year">
+              <Select name="academic_year_id" defaultValue="">
+                <option value="">All years</option>
+                {(academicYears ?? []).map((year: any) => (
+                  <option key={year.id} value={year.id}>{year.name}</option>
+                ))}
+              </Select>
+            </Field>
           </div>
+          <Field label="Description">
+            <Input name="description" placeholder="Schoolwide grading policy for O-Level" />
+          </Field>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input type="hidden" name="status" value="inactive" />
+              <input type="checkbox" name="status" value="active" defaultChecked />
+              Active immediately
+            </label>
+          </div>
+        </ActionForm>
+
+        <div className="mt-6 space-y-3">
+          {(schemes ?? []).length ? (schemes ?? []).map((scheme: any) => (
+            <div key={scheme.id} className="rounded-md border border-border p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h4 className="font-semibold text-ink">{scheme.name}</h4>
+                  <p className="text-sm text-muted">{scheme.description ?? 'No description'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={scheme.status === 'active' ? 'success' : 'neutral'}>{scheme.status}</Badge>
+                  <DeleteButton action={deleteGradingScheme} id={scheme.id} label="Delete" />
+                </div>
+              </div>
+
+              <ActionForm action={updateGradingScheme} submitLabel="Save scheme" className="mt-4 space-y-4">
+                <input type="hidden" name="id" value={scheme.id} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Scheme name">
+                    <Input name="name" defaultValue={scheme.name} required />
+                  </Field>
+                  <Field label="Education level">
+                    <Select name="education_level_id" defaultValue={scheme.education_level_id ?? ''}>
+                      <option value="">Select level</option>
+                      {(educationLevels ?? []).map((level: any) => (
+                        <option key={level.id} value={level.id}>{level.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Maximum marks">
+                    <Input name="max_mark" type="number" min={1} defaultValue={scheme.max_mark ?? 100} required />
+                  </Field>
+                  <Field label="Academic year">
+                    <Select name="academic_year_id" defaultValue={scheme.academic_year_id ?? ''}>
+                      <option value="">All years</option>
+                      {(academicYears ?? []).map((year: any) => (
+                        <option key={year.id} value={year.id}>{year.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+                <Field label="Description">
+                  <Input name="description" defaultValue={scheme.description ?? ''} />
+                </Field>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-ink">
+                    <input type="hidden" name="status" value="inactive" />
+                    <input type="checkbox" name="status" value="active" defaultChecked={scheme.status === 'active'} />
+                    Active
+                  </label>
+                </div>
+              </ActionForm>
+            </div>
+          )) : <p className="help-text">No grading schemes have been created yet.</p>}
         </div>
-      </ActionForm>
-    </Card>
+      </Card>
 
-    <Card>
-      <CardHeader><CardTitle>Exam type mapping</CardTitle></CardHeader>
-      <p className="help-text mb-5">Choose the default grading and division scheme for each exam category.</p>
-      <ActionForm action={saveExamGradingConfig} submitLabel="Save exam mapping" className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Exam type" name="exam-type-config"><Select id="exam-type-config" name="examination_type_id" defaultValue=""><option value="">Select an exam type</option>{(examTypes ?? []).map((type: any) => <option key={type.id} value={type.id}>{type.name}</option>)}</Select></Field>
-          <Field label="Use standard school scheme" name="use-standard-scale"><Select id="use-standard-scale" name="use_standard_scale" defaultValue="true"><option value="true">Use the standard school scheme</option><option value="false">Use a custom mapping</option></Select></Field>
-          <Field label="Grading scheme" name="map-scale-id"><Select id="map-scale-id" name="grading_scale_id" defaultValue=""><option value="">Choose grading scheme</option>{(scales ?? []).map((scale: any) => <option key={scale.id} value={scale.id}>{scale.name}</option>)}</Select></Field>
-          <Field label="Division scheme" name="map-division-id"><Select id="map-division-id" name="division_rule_id" defaultValue=""><option value="">Choose division scheme</option>{(rules ?? []).map((rule: any) => <option key={rule.id} value={rule.id}>{rule.name}</option>)}</Select></Field>
+      <Card>
+        <CardHeader>
+          <CardTitle>Grade ranges</CardTitle>
+          <Badge variant="neutral">{(gradeRanges ?? []).length} configured</Badge>
+        </CardHeader>
+
+        {activeScheme ? (
+          <>
+            <ActionForm action={addGradeRange} submitLabel="Add grade" className="space-y-4">
+              <input type="hidden" name="grading_scale_id" value={activeScheme.id} />
+              <div className="grid gap-4 md:grid-cols-4">
+                <Field label="Grade">
+                  <Input name="grade_name" placeholder="A" required />
+                </Field>
+                <Field label="Min mark">
+                  <Input name="min_score" type="number" min={0} defaultValue={0} required />
+                </Field>
+                <Field label="Max mark">
+                  <Input name="max_score" type="number" min={0} defaultValue={100} required />
+                </Field>
+                <Field label="Point">
+                  <Input name="points" type="number" min={0} defaultValue={1} required />
+                </Field>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Remark">
+                  <Input name="remark" placeholder="Excellent" />
+                </Field>
+                <Field label="Order">
+                  <Input name="order_index" type="number" min={0} defaultValue={0} />
+                </Field>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-ink">
+                <input type="hidden" name="passed" value="false" />
+                <input type="checkbox" name="passed" value="true" defaultChecked />
+                Passed grade
+              </label>
+            </ActionForm>
+
+            <div className="mt-6 overflow-hidden rounded-md border border-border">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-muted/30">
+                  <tr>
+                    <th className="px-3 py-2">Grade</th>
+                    <th className="px-3 py-2">Min</th>
+                    <th className="px-3 py-2">Max</th>
+                    <th className="px-3 py-2">Point</th>
+                    <th className="px-3 py-2">Remark</th>
+                    <th className="px-3 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(gradeRanges ?? []).map((range: any) => (
+                    <tr key={range.id} className="border-t border-border align-top">
+                      <td className="px-3 py-2">
+                        <ActionForm action={updateGradeRange} submitLabel="Save" className="space-y-2">
+                          <input type="hidden" name="id" value={range.id} />
+                          <input type="hidden" name="grading_scale_id" value={activeScheme.id} />
+                          <Input name="grade_name" defaultValue={range.grade_name} required />
+                          <Input name="remark" defaultValue={range.remark ?? ''} />
+                        </ActionForm>
+                      </td>
+                      <td className="px-3 py-2">
+                        <ActionForm action={updateGradeRange} submitLabel="Save" className="space-y-2">
+                          <input type="hidden" name="id" value={range.id} />
+                          <input type="hidden" name="grading_scale_id" value={activeScheme.id} />
+                          <Input name="min_score" type="number" min={0} defaultValue={range.min_score} required />
+                        </ActionForm>
+                      </td>
+                      <td className="px-3 py-2">
+                        <ActionForm action={updateGradeRange} submitLabel="Save" className="space-y-2">
+                          <input type="hidden" name="id" value={range.id} />
+                          <input type="hidden" name="grading_scale_id" value={activeScheme.id} />
+                          <Input name="max_score" type="number" min={0} defaultValue={range.max_score} required />
+                        </ActionForm>
+                      </td>
+                      <td className="px-3 py-2">
+                        <ActionForm action={updateGradeRange} submitLabel="Save" className="space-y-2">
+                          <input type="hidden" name="id" value={range.id} />
+                          <input type="hidden" name="grading_scale_id" value={activeScheme.id} />
+                          <Input name="points" type="number" min={0} defaultValue={range.points} required />
+                        </ActionForm>
+                      </td>
+                      <td className="px-3 py-2">
+                        <label className="flex items-center gap-2 text-sm text-ink">
+                          <input type="hidden" name="passed" value="false" />
+                          <input type="checkbox" defaultChecked={range.passed ?? true} />
+                          Passed
+                        </label>
+                      </td>
+                      <td className="px-3 py-2">
+                        <DeleteButton action={deleteGradeRange} id={range.id} label="Delete" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : <p className="help-text">Create a grading scheme before adding grade ranges.</p>}
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Division ranges</CardTitle>
+          <Badge variant="neutral">{(divisionRules ?? []).length} configured</Badge>
+        </CardHeader>
+
+        <ActionForm action={createDivisionRule} submitLabel="Create division rule" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Rule name">
+              <Input name="name" placeholder="O-Level Division Rule" required />
+            </Field>
+            <Field label="Education level">
+              <Select name="education_level_id" defaultValue="">
+                <option value="">Select level</option>
+                {(educationLevels ?? []).map((level: any) => (
+                  <option key={level.id} value={level.id}>{level.name}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Subjects counted">
+              <Input name="subjects_counted" type="number" min={1} defaultValue={7} required />
+            </Field>
+            <Field label="Minimum required">
+              <Input name="minimum_subjects_required" type="number" min={1} defaultValue={7} required />
+            </Field>
+            <Field label="Maximum allowed">
+              <Input name="maximum_subjects_allowed" type="number" min={1} defaultValue={7} required />
+            </Field>
+            <Field label="Selection method">
+              <Select name="selection_method" defaultValue="best_n">
+                <option value="best_n">Best N</option>
+                <option value="all_subjects">All subjects</option>
+                <option value="compulsory_plus_best_optional">Compulsory + best optional</option>
+                <option value="manual">Manual selection</option>
+              </Select>
+            </Field>
+          </div>
+          <Field label="Description">
+            <Input name="description" placeholder="Division calculation policy" />
+          </Field>
+          <label className="flex items-center gap-2 text-sm text-ink">
+            <input type="hidden" name="status" value="inactive" />
+            <input type="checkbox" name="status" value="active" defaultChecked />
+            Active immediately
+          </label>
+        </ActionForm>
+
+        <div className="mt-6 space-y-4">
+          {(divisionRules ?? []).map((rule: any) => (
+            <div key={rule.id} className="rounded-md border border-border p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h4 className="font-semibold text-ink">{rule.name}</h4>
+                  <p className="text-sm text-muted">{rule.description ?? 'No description'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={rule.status === 'active' ? 'success' : 'neutral'}>{rule.status}</Badge>
+                  <DeleteButton action={deleteDivisionRule} id={rule.id} label="Delete" />
+                </div>
+              </div>
+
+              <ActionForm action={updateDivisionRule} submitLabel="Save rule" className="mt-4 space-y-4">
+                <input type="hidden" name="id" value={rule.id} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Rule name">
+                    <Input name="name" defaultValue={rule.name} required />
+                  </Field>
+                  <Field label="Education level">
+                    <Select name="education_level_id" defaultValue={rule.education_level_id ?? ''}>
+                      <option value="">Select level</option>
+                      {(educationLevels ?? []).map((level: any) => (
+                        <option key={level.id} value={level.id}>{level.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Subjects counted">
+                    <Input name="subjects_counted" type="number" min={1} defaultValue={rule.subjects_counted ?? 7} required />
+                  </Field>
+                  <Field label="Minimum required">
+                    <Input name="minimum_subjects_required" type="number" min={1} defaultValue={rule.minimum_subjects_required ?? 7} required />
+                  </Field>
+                  <Field label="Maximum allowed">
+                    <Input name="maximum_subjects_allowed" type="number" min={1} defaultValue={rule.maximum_subjects_allowed ?? 7} required />
+                  </Field>
+                  <Field label="Selection method">
+                    <Select name="selection_method" defaultValue={rule.selection_method ?? 'best_n'}>
+                      <option value="best_n">Best N</option>
+                      <option value="all_subjects">All subjects</option>
+                      <option value="compulsory_plus_best_optional">Compulsory + best optional</option>
+                      <option value="manual">Manual selection</option>
+                    </Select>
+                  </Field>
+                </div>
+                <Field label="Description">
+                  <Input name="description" defaultValue={rule.description ?? ''} />
+                </Field>
+                <label className="flex items-center gap-2 text-sm text-ink">
+                  <input type="hidden" name="status" value="inactive" />
+                  <input type="checkbox" name="status" value="active" defaultChecked={rule.status === 'active'} />
+                  Active
+                </label>
+              </ActionForm>
+
+              <div className="mt-4 rounded-md border border-border p-3">
+                <p className="mb-3 text-sm font-medium text-ink">Division bands</p>
+                <ActionForm action={addDivisionRange} submitLabel="Add division" className="grid gap-3 md:grid-cols-5">
+                  <input type="hidden" name="division_rule_id" value={rule.id} />
+                  <Field label="Division">
+                    <Input name="division_name" placeholder="Division I" required />
+                  </Field>
+                  <Field label="Min points">
+                    <Input name="min_points" type="number" min={0} defaultValue={0} required />
+                  </Field>
+                  <Field label="Max points">
+                    <Input name="max_points" type="number" min={0} placeholder="Leave blank for no cap" />
+                  </Field>
+                  <Field label="Description">
+                    <Input name="description" placeholder="Top band" />
+                  </Field>
+                  <Field label="Order">
+                    <Input name="order_index" type="number" min={0} defaultValue={0} />
+                  </Field>
+                </ActionForm>
+
+                <div className="mt-4 space-y-3">
+                  {((divisionBands ?? []).filter((band: any) => band.division_rule_id === rule.id) || []).map((band: any) => (
+                    <ActionForm key={band.id} action={updateDivisionRange} submitLabel="Save band" className="space-y-3 rounded-md border border-border bg-paper p-3">
+                      <input type="hidden" name="id" value={band.id} />
+                      <div className="grid gap-3 md:grid-cols-5">
+                        <Field label="Division">
+                          <Input name="division_name" defaultValue={band.division_name} required />
+                        </Field>
+                        <Field label="Min points">
+                          <Input name="min_points" type="number" min={0} defaultValue={band.min_points} required />
+                        </Field>
+                        <Field label="Max points">
+                          <Input name="max_points" type="number" min={0} defaultValue={band.max_points ?? ''} placeholder="Leave blank for no cap" />
+                        </Field>
+                        <Field label="Description">
+                          <Input name="description" defaultValue={band.description ?? ''} />
+                        </Field>
+                        <div className="space-y-2">
+                          <Field label="Order">
+                            <Input name="order_index" type="number" min={0} defaultValue={band.order_index ?? 0} />
+                          </Field>
+                          <label className="flex items-center gap-2 text-sm text-ink">
+                            <input type="hidden" name="passed" value="false" />
+                            <input type="checkbox" name="passed" value="true" defaultChecked={band.passed ?? true} />
+                            Passed
+                          </label>
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <DeleteButton action={deleteDivisionRange} id={band.id} label="Delete" />
+                      </div>
+                    </ActionForm>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <Checkbox name="contributes_to_final_result" checked label="Counts in final result summary" />
-        <Checkbox name="contributes_to_division" checked label="Counts in division calculation" />
-      </ActionForm>
-    </Card>
+      </Card>
 
-    <Card>
-      <CardHeader><CardTitle>Exam-specific overrides</CardTitle></CardHeader>
-      <p className="help-text mb-5">Override the default scheme for a specific exam when the standard school config is not enough.</p>
-      <ActionForm action={assignExamScheme} submitLabel="Save override" className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Examination" name="exam-scheme-assignment"><Select id="exam-scheme-assignment" name="examination_id" defaultValue=""><option value="">Select an examination</option>{(exams ?? []).map((exam: any) => <option key={exam.id} value={exam.id}>{exam.name} {exam.term ? `(${exam.term})` : ''}</option>)}</Select></Field>
-          <Field label="Override grading scheme" name="override-scale-id"><Select id="override-scale-id" name="grading_scale_id" defaultValue=""><option value="">Use default</option>{(scales ?? []).map((scale: any) => <option key={scale.id} value={scale.id}>{scale.name}</option>)}</Select></Field>
-          <Field label="Override division scheme" name="override-division-id"><Select id="override-division-id" name="division_rule_id" defaultValue=""><option value="">Use default</option>{(rules ?? []).map((rule: any) => <option key={rule.id} value={rule.id}>{rule.name}</option>)}</Select></Field>
-        </div>
-      </ActionForm>
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Subject selection rules</CardTitle>
+          <Badge variant="neutral">{(selectionRules ?? []).length} rules</Badge>
+        </CardHeader>
 
-    {(scales ?? []).map((scale: any) => <Card key={scale.id}><CardHeader><div><CardTitle>{scale.name}</CardTitle><p className="help-text mt-1">Grade ranges for {levelName}</p></div><span className="rounded-full border border-border px-3 py-1 text-xs">{scale.status}</span></CardHeader><ActionForm action={updateGradingScale} submitLabel="Save scheme settings" className="space-y-5"><input type="hidden" name="id" value={scale.id} /><input type="hidden" name="education_level_id" value={scale.education_level_id ?? ''} /><div className="grid gap-4 md:grid-cols-2"><Field label="Scheme name" name={`scale-name-${scale.id}`}><Input id={`scale-name-${scale.id}`} name="name" defaultValue={scale.name} required /></Field><Field label="Description" name={`scale-description-${scale.id}`}><Input id={`scale-description-${scale.id}`} name="description" defaultValue={scale.description ?? ''} /></Field><Field label="Maximum mark" name={`scale-max-${scale.id}`}><Input id={`scale-max-${scale.id}`} name="max_mark" type="number" min="1" defaultValue={scale.max_mark} required /></Field><Field label="Minimum pass mark" name={`scale-pass-${scale.id}`}><Input id={`scale-pass-${scale.id}`} name="minimum_pass_mark" type="number" min="0" defaultValue={scale.minimum_pass_mark} required /></Field></div><Checkbox name="coverage_required" checked={scale.coverage_required} label="Require complete mark coverage" /></ActionForm><div className="mt-6"><h4 className="font-semibold text-ink">Grade ranges</h4><p className="help-text mt-1">Example: minimum 80, maximum 100, grade A, point 1, remark Excellent.</p><div className="mt-4 space-y-3">{(scale.grade_bands ?? []).map((band: any) => <div key={band.id} className="rounded-md border border-border p-4"><ActionForm action={updateGradeBand} submitLabel="Save grade range" className="grid gap-4 md:grid-cols-4 xl:grid-cols-8"><input type="hidden" name="id" value={band.id} /><input type="hidden" name="grading_scale_id" value={scale.id} /><Field label="Minimum mark" name={`band-min-${band.id}`}><Input id={`band-min-${band.id}`} name="min_score" type="number" defaultValue={band.min_score} required /></Field><Field label="Maximum mark" name={`band-max-${band.id}`}><Input id={`band-max-${band.id}`} name="max_score" type="number" defaultValue={band.max_score} required /></Field><Field label="Grade label" name={`band-grade-${band.id}`}><Input id={`band-grade-${band.id}`} name="grade_name" defaultValue={band.grade_name} placeholder="A, A+, B-" required /></Field><Field label="Grade point" name={`band-point-${band.id}`}><Input id={`band-point-${band.id}`} name="points" type="number" step="0.01" defaultValue={band.points ?? ''} required /></Field><Field label="Remark" name={`band-remark-${band.id}`}><Input id={`band-remark-${band.id}`} name="remark" defaultValue={band.remark ?? ''} required /></Field><Field label="Display order" name={`band-order-${band.id}`}><Input id={`band-order-${band.id}`} name="order_index" type="number" defaultValue={band.order_index ?? 0} required /></Field><Checkbox name="passed" checked={band.passed} label="Pass" /></ActionForm><div className="mt-2 flex justify-end"><DeleteButton action={deleteGradeBand} id={band.id} label="Delete grade range" /></div></div>)}</div><div className="mt-5 rounded-md border border-dashed border-border p-4"><p className="font-medium text-ink">Add a grade range</p><ActionForm action={addGradeBand} submitLabel="Add grade range" className="mt-3 grid gap-4 md:grid-cols-4 xl:grid-cols-7"><input type="hidden" name="grading_scale_id" value={scale.id} /><Field label="Minimum mark" name={`new-band-min-${scale.id}`}><Input id={`new-band-min-${scale.id}`} name="min_score" type="number" placeholder="80" required /></Field><Field label="Maximum mark" name={`new-band-max-${scale.id}`}><Input id={`new-band-max-${scale.id}`} name="max_score" type="number" placeholder="100" required /></Field><Field label="Grade label" name={`new-band-grade-${scale.id}`}><Input id={`new-band-grade-${scale.id}`} name="grade_name" placeholder="A" required /></Field><Field label="Grade point" name={`new-band-point-${scale.id}`}><Input id={`new-band-point-${scale.id}`} name="points" type="number" step="0.01" placeholder="1" required /></Field><Field label="Remark" name={`new-band-remark-${scale.id}`}><Input id={`new-band-remark-${scale.id}`} name="remark" placeholder="Excellent" required /></Field><Field label="Display order" name={`new-band-order-${scale.id}`}><Input id={`new-band-order-${scale.id}`} name="order_index" type="number" defaultValue="0" required /></Field><Checkbox name="passed" checked label="Pass" /></ActionForm></div><div className="mt-4 flex gap-2"><ActionForm action={validateGradingScale} submitLabel="Validate grade ranges"><input type="hidden" name="scale_id" value={scale.id} /></ActionForm></div><div className="mt-5"><GradingPreview bands={scale.grade_bands ?? []} /></div></div></Card>)}
+        <ActionForm action={saveSubjectSelectionRule} submitLabel="Save rules" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Education level">
+              <Select name="education_level_id" defaultValue="">
+                <option value="">Select level</option>
+                {(educationLevels ?? []).map((level: any) => (
+                  <option key={level.id} value={level.id}>{level.name}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Academic year">
+              <Select name="academic_year_id" defaultValue="">
+                <option value="">All years</option>
+                {(academicYears ?? []).map((year: any) => (
+                  <option key={year.id} value={year.id}>{year.name}</option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Rule name">
+              <Input name="name" defaultValue="Subject selection rule" required />
+            </Field>
+            <Field label="Subjects considered">
+              <Input name="subjects_considered" type="number" min={1} defaultValue={7} required />
+            </Field>
+          </div>
+          <Field label="Selection method">
+            <Select name="selection_method" defaultValue="best_n">
+              <option value="best_n">Best N</option>
+              <option value="all_subjects">All subjects</option>
+              <option value="compulsory_plus_best_optional">Compulsory + best optional</option>
+              <option value="manual">Manual selection</option>
+            </Select>
+          </Field>
 
-    <Card><CardHeader><CardTitle>Create division scheme</CardTitle></CardHeader><p className="help-text mb-5">A grading scheme converts the selected grade-point aggregate into your configured division labels.</p><ActionForm action={createDivisionRule} submitLabel="Create division scheme" className="space-y-5"><div className="grid gap-4 md:grid-cols-2"><Field label="Scheme name" name="new-division-name"><Input id="new-division-name" name="name" placeholder={`${levelName} Division Scheme`} required /></Field><Field label="Description" name="new-division-description"><Input id="new-division-description" name="description" placeholder="For example: final ${levelName} divisions" /></Field><Field label="Number of subjects used" name="new-division-used"><Input id="new-division-used" name="subjects_counted" type="number" min="1" defaultValue="7" required /></Field><Field label="Minimum subjects required" name="new-division-min"><Input id="new-division-min" name="minimum_subjects_required" type="number" min="1" defaultValue="7" required /></Field><Field label="Maximum subjects allowed" name="new-division-max"><Input id="new-division-max" name="maximum_subjects_allowed" type="number" min="1" defaultValue="7" required /></Field><Field label="Subject selection method" name="new-division-method"><Select id="new-division-method" name="selection_method" defaultValue="best_n"><option value="best_n">Best N subjects</option><option value="all_subjects">All subjects</option><option value="compulsory_plus_best_optional">Compulsory + best optional</option><option value="manual">Manually selected</option></Select></Field></div><input type="hidden" name="education_level_id" value={selectedLevel} /><input type="hidden" name="academic_year_id" value={academicYear?.id ?? ''} /><Checkbox name="use_best_subjects" checked label="Use the best-performing subjects when selecting optional subjects" /></ActionForm></Card>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="mb-2 label-text">Required subjects</p>
+              <div className="space-y-2 rounded-md border border-border p-3">
+                {(schoolSubjects ?? []).map((subject: any) => (
+                  <label key={subject.id} className="flex items-center gap-2 text-sm text-ink">
+                    <input type="checkbox" name="required_subjects" value={subject.id} />
+                    {subject.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 label-text">Excluded subjects</p>
+              <div className="space-y-2 rounded-md border border-border p-3">
+                {(schoolSubjects ?? []).map((subject: any) => (
+                  <label key={`${subject.id}-excluded`} className="flex items-center gap-2 text-sm text-ink">
+                    <input type="checkbox" name="excluded_subjects" value={subject.id} />
+                    {subject.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="mb-2 label-text">Optional subjects</p>
+              <div className="space-y-2 rounded-md border border-border p-3">
+                {(schoolSubjects ?? []).map((subject: any) => (
+                  <label key={`${subject.id}-optional`} className="flex items-center gap-2 text-sm text-ink">
+                    <input type="checkbox" name="optional_subjects" value={subject.id} />
+                    {subject.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 label-text">Compulsory subjects</p>
+              <div className="space-y-2 rounded-md border border-border p-3">
+                {(schoolSubjects ?? []).map((subject: any) => (
+                  <label key={`${subject.id}-compulsory`} className="flex items-center gap-2 text-sm text-ink">
+                    <input type="checkbox" name="compulsory_subjects" value={subject.id} />
+                    {subject.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ActionForm>
+      </Card>
 
-    {(rules ?? []).map((rule: any) => <Card key={rule.id}><CardHeader><div><CardTitle>{rule.name}</CardTitle><p className="help-text mt-1">Division ranges and subject selection for {levelName}</p></div></CardHeader><ActionForm action={updateDivisionRule} submitLabel="Save division settings" className="space-y-5"><input type="hidden" name="id" value={rule.id} /><input type="hidden" name="education_level_id" value={rule.education_level_id ?? ''} /><div className="grid gap-4 md:grid-cols-2"><Field label="Scheme name" name={`rule-name-${rule.id}`}><Input id={`rule-name-${rule.id}`} name="name" defaultValue={rule.name} required /></Field><Field label="Description" name={`rule-description-${rule.id}`}><Input id={`rule-description-${rule.id}`} name="description" defaultValue={rule.description ?? ''} /></Field><Field label="Number of subjects used" name={`rule-used-${rule.id}`}><Input id={`rule-used-${rule.id}`} name="subjects_counted" type="number" defaultValue={rule.subjects_counted} required /></Field><Field label="Minimum subjects required" name={`rule-min-${rule.id}`}><Input id={`rule-min-${rule.id}`} name="minimum_subjects_required" type="number" defaultValue={rule.minimum_subjects_required} required /></Field><Field label="Maximum subjects allowed" name={`rule-max-${rule.id}`}><Input id={`rule-max-${rule.id}`} name="maximum_subjects_allowed" type="number" defaultValue={rule.maximum_subjects_allowed} required /></Field><Field label="Subject selection method" name={`rule-method-${rule.id}`}><Select id={`rule-method-${rule.id}`} name="selection_method" defaultValue={rule.selection_method ?? 'best_n'}><option value="best_n">Best N subjects</option><option value="all_subjects">All subjects</option><option value="compulsory_plus_best_optional">Compulsory + best optional</option><option value="manual">Manually selected</option></Select></Field></div><Checkbox name="use_best_subjects" checked={rule.use_best_subjects} label="Use best-performing subjects" /><Checkbox name="include_compulsory" checked={rule.include_compulsory} label="Include compulsory subjects" /><input type="hidden" name="auto_select_optional" value={rule.auto_select_optional ? 'true' : 'false'} /></ActionForm><div className="mt-6"><h4 className="font-semibold text-ink">Division ranges</h4><p className="help-text mt-1">Example: Division I minimum 7, maximum 17. Leave maximum blank for an open range such as 39+.</p><div className="mt-4 space-y-3">{(rule.division_bands ?? []).map((band: any) => <div key={band.id} className="rounded-md border border-border p-4"><ActionForm action={updateDivisionBand} submitLabel="Save division range" className="grid gap-4 md:grid-cols-3 xl:grid-cols-6"><input type="hidden" name="id" value={band.id} /><input type="hidden" name="division_rule_id" value={rule.id} /><Field label="Division label" name={`division-label-${band.id}`}><Input id={`division-label-${band.id}`} name="division_name" defaultValue={band.division_name} placeholder="Division I" required /></Field><Field label="Minimum aggregate" name={`division-min-${band.id}`}><Input id={`division-min-${band.id}`} name="min_points" type="number" defaultValue={band.min_points} required /></Field><Field label="Maximum aggregate" name={`division-max-${band.id}`}><Input id={`division-max-${band.id}`} name="max_points" type="number" defaultValue={band.max_points ?? ''} placeholder="Blank = open" /></Field><Field label="Division remark" name={`division-remark-${band.id}`}><Input id={`division-remark-${band.id}`} name="description" defaultValue={band.description ?? ''} /></Field><Field label="Display order" name={`division-order-${band.id}`}><Input id={`division-order-${band.id}`} name="order_index" type="number" defaultValue={band.order_index ?? 0} required /></Field><Checkbox name="passed" checked={band.passed} label="Pass" /></ActionForm><div className="mt-2 flex justify-end"><DeleteButton action={deleteDivisionBand} id={band.id} label="Delete division range" /></div></div>)}</div><div className="mt-5 rounded-md border border-dashed border-border p-4"><p className="font-medium text-ink">Add a division range</p><ActionForm action={addDivisionBand} submitLabel="Add division range" className="mt-3 grid gap-4 md:grid-cols-3 xl:grid-cols-6"><input type="hidden" name="division_rule_id" value={rule.id} /><Field label="Division label" name={`new-division-label-${rule.id}`}><Input id={`new-division-label-${rule.id}`} name="division_name" placeholder="Division I" required /></Field><Field label="Minimum aggregate" name={`new-division-min-${rule.id}`}><Input id={`new-division-min-${rule.id}`} name="min_points" type="number" placeholder="7" required /></Field><Field label="Maximum aggregate" name={`new-division-max-${rule.id}`}><Input id={`new-division-max-${rule.id}`} name="max_points" type="number" placeholder="17 or blank" /></Field><Field label="Division remark" name={`new-division-remark-${rule.id}`}><Input id={`new-division-remark-${rule.id}`} name="description" placeholder="Excellent" required /></Field><Field label="Display order" name={`new-division-order-${rule.id}`}><Input id={`new-division-order-${rule.id}`} name="order_index" type="number" defaultValue="0" required /></Field><Checkbox name="passed" checked label="Pass" /></ActionForm></div></div><div className="mt-6"><h4 className="font-semibold text-ink">Subject selection</h4><p className="help-text mt-1">Choose compulsory or excluded subjects for this division scheme.</p><div className="mt-3 grid gap-4 md:grid-cols-2"><ActionForm action={saveDivisionSubject} submitLabel="Add compulsory subject"><input type="hidden" name="division_rule_id" value={rule.id} /><input type="hidden" name="kind" value="compulsory" /><Field label="Compulsory subject" name={`compulsory-${rule.id}`}><Select id={`compulsory-${rule.id}`} name="subject_id"><option value="">Select a subject</option>{(subjects ?? []).map((subject: any) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</Select></Field></ActionForm><ActionForm action={saveDivisionSubject} submitLabel="Exclude subject"><input type="hidden" name="division_rule_id" value={rule.id} /><input type="hidden" name="kind" value="excluded" /><Field label="Excluded subject" name={`excluded-${rule.id}`}><Select id={`excluded-${rule.id}`} name="subject_id"><option value="">Select a subject</option>{(subjects ?? []).map((subject: any) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</Select></Field></ActionForm></div></div><div className="mt-5 flex justify-end"><DeleteButton action={deleteDivisionRule} id={rule.id} label="Delete division scheme" /></div></Card>)}
-    <Card>
-      <CardHeader><CardTitle>Division point ranges</CardTitle></CardHeader>
-      <p className="help-text mb-4">These are the aggregate thresholds that determine a student&apos;s division.</p>
-      {(rules ?? []).length ? <div className="space-y-4">{(rules ?? []).map((rule: any) => <div key={rule.id} className="rounded-md border border-border p-4"><div className="mb-3 flex items-center justify-between"><h4 className="font-semibold text-ink">{rule.name}</h4><span className="text-xs text-muted">Aggregate points</span></div><div className="space-y-2">{(rule.division_bands ?? []).length ? (rule.division_bands ?? []).map((band: any) => <div key={band.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/20 p-3"><span className="font-medium text-ink">{band.division_name}</span><span className="text-xs text-muted">from {band.min_points}</span><span className="text-xs text-muted">to {band.max_points ?? 'and above'}</span><span className={`rounded-full border px-2 py-1 text-[10px] uppercase ${band.passed ? 'border-emerald-200 text-emerald-700' : 'border-amber-200 text-amber-700'}`}>{band.passed ? 'Pass' : 'Fail'}</span></div>) : <p className="help-text">No division point ranges created for this scheme yet.</p>}</div><ActionForm action={addDivisionBand} submitLabel="Add division range" className="mt-4 grid gap-4 md:grid-cols-3 xl:grid-cols-6"><input type="hidden" name="division_rule_id" value={rule.id} /><Field label="Division name" name={`division-name-${rule.id}`}><Input id={`division-name-${rule.id}`} name="division_name" placeholder="Division I" required /></Field><Field label="Minimum aggregate" name={`division-min-${rule.id}`}><Input id={`division-min-${rule.id}`} name="min_points" type="number" min="0" defaultValue="0" required /></Field><Field label="Maximum aggregate" name={`division-max-${rule.id}`}><Input id={`division-max-${rule.id}`} name="max_points" type="number" min="0" placeholder="Leave empty for no cap" /></Field><Field label="Order" name={`division-order-${rule.id}`}><Input id={`division-order-${rule.id}`} name="order_index" type="number" min="0" defaultValue="0" /></Field><div className="pt-7"><Checkbox name="passed" checked label="Pass band" /></div></ActionForm></div>)}</div> : <p className="help-text">No division schemes have been created yet.</p>}
-    </Card>
-
-    <Card>
-      <CardHeader><CardTitle>Result preparation checklist</CardTitle></CardHeader>
-      <ul className="list-disc space-y-2 pl-5 text-sm text-ink">
-        <li>Every exam type should map to a valid grading scale and division rule.</li>
-        <li>Division ranges must start at 0 and cover the full aggregate range used by the class scheme.</li>
-        <li>Ranking follows the configured method: aggregate points, total marks, or average mark.</li>
-        <li>Exam-specific assignments override the broader defaults.</li>
-      </ul>
-    </Card>
-  </main>;
+      <Card>
+        <CardHeader>
+          <CardTitle>Test calculation</CardTitle>
+        </CardHeader>
+        <GradingPreview
+          scheme={activeScheme}
+          gradeRanges={gradeRanges ?? []}
+          divisionRanges={divisionBands ?? []}
+          subjects={schoolSubjects}
+          defaultLevelId={activeScheme?.education_level_id ?? null}
+        />
+      </Card>
+    </div>
+  );
 }
