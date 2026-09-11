@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getSignedDownloadUrl } from '@/lib/storage/r2';
 
 export interface CurrentSession {
   userId: string;
@@ -12,6 +13,7 @@ export interface CurrentSession {
     name: string;
     slug: string;
     logoPath: string | null;
+    logoUrl: string | null;
     setupStep: number;
     setupCompleted: boolean;
     status: 'active' | 'suspended' | 'deactivated';
@@ -44,6 +46,16 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
     supabase.from('platform_admins').select('profile_id').eq('profile_id', user.id).maybeSingle(),
   ]);
 
+  const logoPath = profile?.school ? (profile.school as any).logo_path as string | null : null;
+  let logoUrl: string | null = null;
+  if (logoPath) {
+    try {
+      logoUrl = await getSignedDownloadUrl(logoPath);
+    } catch (error) {
+      console.error('School logo URL generation failed', error);
+    }
+  }
+
   return {
     userId: user.id,
     fullName: profile?.full_name ?? user.email ?? 'User',
@@ -54,7 +66,8 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
           id: (profile.school as any).id,
           name: (profile.school as any).name,
           slug: (profile.school as any).slug,
-          logoPath: (profile.school as any).logo_path,
+          logoPath,
+          logoUrl,
           setupStep: (profile.school as any).setup_step,
           setupCompleted: (profile.school as any).setup_completed,
           status: (profile.school as any).status,

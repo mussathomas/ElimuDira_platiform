@@ -7,7 +7,15 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const classId = url.searchParams.get('class_id') || undefined;
   const examinationId = url.searchParams.get('examination_id') || undefined;
-  const data = await loadStudentReports(session.school!.id, classId, examinationId);
+  const academicYearId = url.searchParams.get('academic_year_id') || undefined;
+  const term = url.searchParams.get('term') || undefined;
+  const educationLevelId = url.searchParams.get('education_level_id') || undefined;
+  const streamId = url.searchParams.get('stream_id') || undefined;
+  const gender = url.searchParams.get('gender') || undefined;
+  const status = url.searchParams.get('status') || undefined;
+  const data = await loadStudentReports(session.school!.id, classId, examinationId, { academicYearId, term, educationLevelId, streamId, gender });
+  if (status) data.results = (data.results as any[]).filter((result) => result.status === status);
+  if (url.searchParams.get('format') === 'class-roster') return createClassRosterPdf(data, session.school!.name, classId, examinationId);
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -60,4 +68,46 @@ export async function GET(request: Request) {
       'Cache-Control': 'private, no-store',
     },
   });
+}
+
+async function createClassRosterPdf(data: any, fallbackSchoolName: string, classId?: string, examinationId?: string) {
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const page = pdf.addPage([842, 595]);
+  const school = data.school;
+  const draw = (text: string, x: number, y: number, size = 8, isBold = false) => page.drawText(text.slice(0, 150), { x, y, size, font: isBold ? bold : font, color: rgb(0.08, 0.12, 0.16) });
+  let y = 560;
+  draw(school?.name ?? fallbackSchoolName, 28, y, 16, true); y -= 18;
+  draw([school?.address, school?.region, school?.district].filter(Boolean).join(', '), 28, y); y -= 12;
+  draw([school?.phone, school?.email].filter(Boolean).join(' · '), 28, y); y -= 12;
+  draw(school?.motto ?? '', 28, y, 8, false); y -= 22;
+  const className = (data.classes as any[]).find((item) => item.id === classId)?.name ?? 'All classes';
+  const examination = (data.examinations as any[]).find((item) => item.id === examinationId);
+  const rosterTitle = `${className} Results${examination ? ` · ${examination.name} · ${examination.term}` : ''}`;
+  draw(rosterTitle, 28, y, 12, true); y -= 18;
+  const students = data.students as any[];
+  const marks = data.marks as any[];
+  const results = data.results as any[];
+  const subjectMap = new Map<string, string>();
+  for (const mark of marks) { const subject = Array.isArray(mark.subjects) ? mark.subjects[0] : mark.subjects; if (mark.subject_id) subjectMap.set(mark.subject_id, subject?.name ?? 'Subject'); }
+  const subjects = [...subjectMap.entries()].sort((left, right) => left[1].localeCompare(right[1]));
+  const columns = ['No.', 'Adm No.', 'Student', ...subjects.map(([, name]) => name), 'Total', 'Average', 'Points', 'Division', 'Position'];
+  const widths = [24, 55, 105, ...subjects.map(() => 55), 45, 48, 45, 48, 45];
+  const xFor = (index: number) => 28 + widths.slice(0, index).reduce((sum, width) => sum + width, 0);
+  const headerHeight = 24;
+  columns.forEach((column, index) => draw(column, xFor(index) + 2, y, 6, true));
+  y -= headerHeight;
+  for (const [rowIndex, student] of students.entries()) {
+    if (y < 35) { page.drawText('Continued on next page', { x: 28, y: 18, size: 7, font }); break; }
+    const result = results.find((item) => item.student_id === student.id);
+    const studentMarks = marks.filter((mark) => mark.student_id === student.id);
+    const values = [rowIndex + 1, student.admission_number ?? '', `${student.first_name ?? ''} ${student.last_name ?? ''}`, ...subjects.map(([id]) => { const mark = studentMarks.find((item) => item.subject_id === id); return mark ? `${mark.score ?? '—'} ${mark.grade ?? ''}` : '—'; }), result?.total_marks ?? '—', result?.average_mark != null ? Number(result.average_mark).toFixed(2) : '—', result?.aggregate ?? '—', result?.division ?? '—', result?.position ?? '—'];
+    values.forEach((value, index) => draw(String(value), xFor(index) + 2, y, 6));
+    page.drawLine({ start: { x: 28, y: y - 4 }, end: { x: 814, y: y - 4 }, thickness: 0.3, color: rgb(0.75, 0.75, 0.75) });
+    y -= 15;
+  }
+  const bytes = await pdf.save();
+  const filename = `${rosterTitle.replace(/[^a-z0-9-_]+/gi, '-').toLowerCase()}-roster.pdf`;
+  return new Response(Buffer.from(bytes), { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"`, 'Cache-Control': 'private, no-store' } });
 }

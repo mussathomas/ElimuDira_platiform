@@ -24,11 +24,9 @@ export const schoolNav: NavSection[] = [
     ],
   },
   {
-    label: 'Staff & Administration',
+    label: 'Admin Manager',
     children: [
       { label: 'Manage Staff', href: '/dashboard/staff', permission: 'view_staff' },
-      { label: 'Users', href: '/dashboard/staff/users', permission: 'view_users' },
-      { label: 'Positions', href: '/dashboard/staff/positions', permission: 'view_staff' },
       { label: 'Roles', href: '/dashboard/staff/roles', permission: 'manage_roles' },
       { label: 'Permissions', href: '/dashboard/staff/permissions', permission: 'manage_roles' },
       { label: 'Audit', href: '/dashboard/staff/audit', permission: 'view_audit' },

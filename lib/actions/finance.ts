@@ -46,6 +46,13 @@ export async function createFeeStructure(formData: FormData): Promise<ActionResu
   }
   const { data: structure, error } = await supabase.from('fee_structures').insert({ school_id: session.school!.id, class_id: parsed.data.class_id || null, academic_year_id: parsed.data.academic_year_id || null, name: parsed.data.name, amount: parsed.data.amount, due_date: parsed.data.due_date || null, created_by: session.userId }).select('id').single();
   if (error) return { ok: false, error: 'Unable to create the fee structure.' };
+  let studentsQuery = supabase.from('students').select('id').eq('school_id', session.school!.id).eq('status', 'active');
+  if (parsed.data.class_id) studentsQuery = studentsQuery.eq('class_id', parsed.data.class_id);
+  const { data: students } = await studentsQuery;
+  if (students?.length) {
+    const { error: assessmentError } = await supabase.from('fee_assessments').insert(students.map((student) => ({ school_id: session.school!.id, student_id: student.id, fee_structure_id: structure.id, academic_year_id: parsed.data.academic_year_id || null, description: parsed.data.name, amount: parsed.data.amount, due_date: parsed.data.due_date || null, created_by: session.userId })));
+    if (assessmentError) return { ok: false, error: 'The structure was created, but learner assessments could not be generated.' };
+  }
   await supabase.from('audit_logs').insert({ school_id: session.school!.id, actor_id: session.userId, action: 'finance.structure.create', resource_type: 'fee_structure', resource_id: structure.id });
   revalidatePath('/dashboard/finance');
   return { ok: true };

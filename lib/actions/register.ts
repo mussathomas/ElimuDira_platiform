@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { schoolObjectKey, uploadObject } from '@/lib/storage/r2';
+import { deleteObject, schoolObjectKey, uploadObject } from '@/lib/storage/r2';
 
 const registerSchema = z
   .object({
@@ -122,6 +122,13 @@ export async function registerSchool(_prev: RegisterResult | null, formData: For
 
   if (rpcError) {
     console.error('register_school RPC failed', rpcError);
+    if (logoPath) {
+      try {
+        await deleteObject(logoPath);
+      } catch (cleanupError) {
+        console.error('Uploaded school logo cleanup failed', cleanupError);
+      }
+    }
     if (rpcError.code === 'PGRST202') {
       return {
         ok: false,

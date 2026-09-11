@@ -16,6 +16,11 @@ const staffSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
+const staffUpdateSchema = staffSchema.omit({ password: true }).extend({
+  staff_id: z.string().uuid(),
+  password: z.string().min(8).optional().or(z.literal('')),
+});
+
 export async function createStaffAccount(formData: FormData): Promise<ActionResult> {
   const session = await requirePermission('manage_staff');
   const parsed = staffSchema.safeParse(Object.fromEntries(formData));
@@ -70,5 +75,39 @@ export async function createStaffAccount(formData: FormData): Promise<ActionResu
   await admin.from('audit_logs').insert({ school_id: session.school!.id, actor_id: session.userId, action: 'staff.create', resource_type: 'staff_member', resource_id: staff.id });
   revalidatePath('/dashboard/staff');
   revalidatePath('/dashboard/staff/users');
+  return { ok: true };
+}
+
+export async function updateStaffAccount(formData: FormData): Promise<ActionResult> {
+  const session = await requirePermission('edit_staff');
+  const parsed = staffUpdateSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the staff details.' };
+  const supabase = await createServerSupabaseClient();
+  const { data: staff } = await supabase.from('staff_members').select('id, profile_id').eq('id', parsed.data.staff_id).eq('school_id', session.school!.id).maybeSingle();
+  if (!staff) return { ok: false, error: 'Staff member not found in this school.' };
+  const { data: role } = await supabase.from('roles').select('id').eq('id', parsed.data.role_id).eq('school_id', session.school!.id).maybeSingle();
+  if (!role) return { ok: false, error: 'Choose a role belonging to this school.' };
+  const admin = createAdminSupabaseClient();
+  const { error: profileError } = await admin.from('profiles').update({ full_name: parsed.data.full_name, email: parsed.data.email, phone: parsed.data.phone || null, role_id: role.id }).eq('id', staff.profile_id).eq('school_id', session.school!.id);
+  if (profileError) return { ok: false, error: 'Unable to update the staff profile.' };
+  const { error: staffError } = await admin.from('staff_members').update({ employee_number: parsed.data.employee_number, position: parsed.data.position || null }).eq('id', staff.id).eq('school_id', session.school!.id);
+  if (staffError) return { ok: false, error: staffError.code === '23505' ? 'That employee number already exists.' : 'Unable to update the staff record.' };
+  if (parsed.data.password) await admin.auth.admin.updateUserById(staff.profile_id, { password: parsed.data.password });
+  await admin.from('audit_logs').insert({ school_id: session.school!.id, actor_id: session.userId, action: 'staff.update', resource_type: 'staff_member', resource_id: staff.id });
+  revalidatePath('/dashboard/staff'); revalidatePath(`/dashboard/staff/${staff.id}/edit`);
+  return { ok: true };
+}
+
+export async function deleteStaffAccount(staffId: string): Promise<ActionResult> {
+  const session = await requirePermission('delete_staff');
+  const supabase = await createServerSupabaseClient();
+  const { data: staff } = await supabase.from('staff_members').select('id, profile_id').eq('id', staffId).eq('school_id', session.school!.id).maybeSingle();
+  if (!staff) return { ok: false, error: 'Staff member not found in this school.' };
+  if (staff.profile_id === session.userId) return { ok: false, error: 'You cannot delete your own staff account.' };
+  const admin = createAdminSupabaseClient();
+  await admin.from('audit_logs').insert({ school_id: session.school!.id, actor_id: session.userId, action: 'staff.delete', resource_type: 'staff_member', resource_id: staff.id });
+  const { error } = await admin.auth.admin.deleteUser(staff.profile_id);
+  if (error) return { ok: false, error: 'Unable to delete the staff account.' };
+  revalidatePath('/dashboard/staff');
   return { ok: true };
 }

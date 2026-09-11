@@ -11,7 +11,7 @@ interface SidebarProps {
   sections: NavSection[];
   permissions: Set<string>;
   isSuperAdmin: boolean;
-  brand: { title: string; subtitle?: string };
+  brand: { title: string; subtitle?: string; logoUrl?: string | null };
 }
 
 function isVisible(permission: string | undefined, permissions: Set<string>, isSuperAdmin: boolean) {
@@ -43,8 +43,13 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
   return (
     <nav className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-white">
       <div className="flex items-center gap-2 border-b border-border px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white">
-          <LayoutDashboard size={16} />
+        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-brand text-white">
+          {brand.logoUrl ? (
+            // Signed R2 URLs are request-scoped and are safe to pass to this client component.
+            <img src={brand.logoUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <LayoutDashboard size={16} />
+          )}
         </div>
         <div>
           <p className="text-sm font-semibold leading-tight text-ink">{brand.title}</p>

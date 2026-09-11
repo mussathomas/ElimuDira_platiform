@@ -30,3 +30,33 @@
     @apply text-sm text-muted;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #class-results-print-root,
+  #class-results-print-root * {
+    visibility: visible !important;
+  }
+
+  #class-results-print-root {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: white;
+  }
+
+  #class-results-print-root table {
+    width: 100%;
+    min-width: 0;
+    font-size: 8pt;
+  }
+
+  #class-results-print-root th,
+  #class-results-print-root td {
+    position: static !important;
+    padding: 4px;
+  }
+}

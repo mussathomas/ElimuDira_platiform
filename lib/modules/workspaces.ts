@@ -5,7 +5,7 @@ const schoolWorkspaces: Record<string, ModuleWorkspaceConfig> = {
     title: 'Students', description: 'Manage learner records, enrollment, transfers, and class placement from one workspace.', primaryAction: { label: 'Add student', href: '/dashboard/students/add' }, metrics: [{ label: 'Learners', value: '0', detail: 'No learner records yet' }, { label: 'New this term', value: '0', detail: 'Awaiting enrollment data' }, { label: 'Transfers', value: '0', detail: 'No pending transfers' }], sections: [{ title: 'All students', description: 'Search and review enrolled learners.', href: '/dashboard/students', action: 'Open student register' }, { title: 'Transfers', description: 'Review incoming and outgoing learner transfers.', href: '/dashboard/students/transfers', action: 'Review transfers' }],
   },
   '/dashboard/staff': {
-    title: 'Staff', description: 'Organize staff records, positions, and access to the school workspace.', primaryAction: { label: 'Manage roles', href: '/dashboard/staff/roles' }, metrics: [{ label: 'Staff members', value: '0', detail: 'Staff register is ready' }, { label: 'Roles', value: '4', detail: 'Default roles created' }, { label: 'Permissions', value: 'Catalog', detail: 'Managed by administrators' }], sections: [{ title: 'Users', description: 'Review staff accounts and access.', href: '/dashboard/staff/users', action: 'Open users' }, { title: 'Roles & permissions', description: 'Configure what each role can do.', href: '/dashboard/staff/roles', action: 'Open role matrix' }],
+    title: 'Admin Manager', description: 'Register, edit, remove staff accounts, and manage their roles and permissions.', primaryAction: { label: 'Manage roles', href: '/dashboard/staff/roles' }, metrics: [{ label: 'Staff members', value: '0', detail: 'Staff register is ready' }, { label: 'Roles', value: '4', detail: 'Default roles created' }, { label: 'Permissions', value: 'Catalog', detail: 'Managed by administrators' }], sections: [{ title: 'Staff register', description: 'Review and maintain staff details from the main manager.', href: '/dashboard/staff', action: 'Open staff manager' }, { title: 'Roles & permissions', description: 'Configure what each role can do.', href: '/dashboard/staff/roles', action: 'Open role matrix' }],
   },
   '/dashboard/attendance': {
     title: 'Attendance', description: 'Record daily attendance and follow up on absences by class and staff member.', primaryAction: { label: 'Mark attendance', href: '/dashboard/attendance/class' }, metrics: [{ label: 'Today', value: '0%', detail: 'No attendance recorded' }, { label: 'Present', value: '0', detail: 'Awaiting today\'s register' }, { label: 'Absent', value: '0', detail: 'No absences recorded' }], sections: [{ title: 'Class attendance', description: 'Take today\'s register for a class.', href: '/dashboard/attendance/class', action: 'Take register' }, { title: 'History', description: 'Review attendance trends and previous registers.', href: '/dashboard/attendance/history', action: 'Open history' }],
@@ -29,8 +29,8 @@ export function getSchoolWorkspace(
     const permissionCount = counts?.permissionCount ?? 0;
 
     return {
-      title: 'Staff',
-      description: 'Organize staff records, positions, and access to the school workspace.',
+      title: 'Admin Manager',
+      description: 'Register, edit, remove staff accounts, and manage their roles and permissions.',
       primaryAction: { label: 'Manage roles', href: '/dashboard/staff/roles' },
       metrics: [
         { label: 'Staff members', value: String(staffCount), detail: staffCount === 1 ? '1 active staff member' : `${staffCount} active staff members` },
