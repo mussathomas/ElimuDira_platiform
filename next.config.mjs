@@ -6,6 +6,8 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Keep dev artifacts separate so a local build/start cannot invalidate a running dev server.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   outputFileTracingRoot: projectRoot,
   async redirects() {
     return [

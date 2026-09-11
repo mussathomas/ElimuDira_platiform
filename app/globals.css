@@ -33,6 +33,75 @@
   .help-text {
     @apply text-sm text-muted;
   }
+
+  #class-results-print-root {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #class-results-print-root > div.overflow-auto {
+    max-width: 100%;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+  }
+
+  #class-results-print-root table {
+    min-width: 1100px !important;
+    width: max-content;
+  }
+
+  #class-results-print-root th:first-child,
+  #class-results-print-root td:first-child {
+    width: 3rem;
+  }
+
+  #class-results-print-root th:nth-child(2),
+  #class-results-print-root td:nth-child(2) {
+    width: 6rem;
+  }
+
+  .report-page,
+  .report-page > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .report-page .overflow-x-auto {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .report-page .overflow-x-auto table {
+    min-width: 560px;
+  }
+
+  @media (max-width: 640px) {
+    #class-results-print-root > div.overflow-auto {
+      overflow-x: scroll;
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #class-results-print-root > div.overflow-auto th.sticky,
+    #class-results-print-root > div.overflow-auto td.sticky {
+      position: static !important;
+      left: auto !important;
+      z-index: auto !important;
+    }
+
+    .report-page > .card:first-child form {
+      width: 100%;
+    }
+
+    .report-page > .card:first-child form > div,
+    .report-page > .card:first-child form select,
+    .report-page > .card:first-child form button {
+      width: 100%;
+    }
+  }
 }
 
 @media print {

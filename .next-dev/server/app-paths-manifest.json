@@ -1,0 +1,5 @@
+{
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/icon.svg/route": "app/icon.svg/route.js",
+  "/dashboard/exams/class-results/page": "app/dashboard/exams/class-results/page.js"
+}
