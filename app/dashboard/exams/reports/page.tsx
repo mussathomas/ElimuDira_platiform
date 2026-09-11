@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { requirePermission } from '@/lib/permissions/session';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select } from '@/components/ui/field';
 import { loadStudentReports } from '@/lib/reports/student-reports';
 import { ActionForm } from '@/components/ui/action-form';
@@ -9,41 +10,16 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const session = await requirePermission('download_reports');
   const params = await searchParams;
   const data = await loadStudentReports(session.school!.id, params.class_id, params.examination_id);
-  const pdfParams = new URLSearchParams();
-  if (params.class_id) pdfParams.set('class_id', params.class_id);
-  if (params.examination_id) pdfParams.set('examination_id', params.examination_id);
-  const pdfHref = `/api/exams/reports/pdf${pdfParams.toString() ? `?${pdfParams.toString()}` : ''}`;
+  const pdfParams = new URLSearchParams(); if (params.class_id) pdfParams.set('class_id', params.class_id); if (params.examination_id) pdfParams.set('examination_id', params.examination_id);
+  const pdfHref = `/api/exams/reports/pdf${pdfParams.toString() ? `?${pdfParams}` : ''}`;
   const resultsByStudent = new Map<string, any[]>();
   for (const result of data.results as any[]) resultsByStudent.set(result.student_id, [...(resultsByStudent.get(result.student_id) ?? []), result]);
+  const marksByResult = new Map<string, any[]>();
+  for (const mark of data.marks as any[]) { const key = `${mark.student_id}-${mark.examination_id}`; marksByResult.set(key, [...(marksByResult.get(key) ?? []), mark]); }
   const school = data.school;
   const schoolLine = [school?.address, school?.region, school?.district].filter(Boolean).join(', ') || 'School details not configured';
 
-  return (
-    <main className="space-y-6">
-      <Card>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-lg font-semibold text-ink">{school?.name ?? session.school!.name}</p><p className="help-text">{schoolLine}{school?.phone ? ` · ${school.phone}` : ''}{school?.email ? ` · ${school.email}` : ''}</p>{school?.motto && <p className="help-text italic">{school.motto}</p>}<h2 className="mt-3 text-xl font-semibold text-ink">Class reports</h2><p className="help-text mt-1">A printable roster of finalized reports, grouped by student.</p></div>
-          <div className="flex flex-wrap items-end gap-2">
-            <form method="get" className="flex flex-wrap items-end gap-2">
-              <div><label className="label-text" htmlFor="class_id">Class</label><Select id="class_id" name="class_id" defaultValue={params.class_id ?? ''}><option value="">All classes</option>{(data.classes as any[]).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
-              <div><label className="label-text" htmlFor="examination_id">Examination</label><Select id="examination_id" name="examination_id" defaultValue={params.examination_id ?? ''}><option value="">All examinations</option>{(data.examinations as any[]).map((item) => <option key={item.id} value={item.id}>{item.name} ({item.term})</option>)}</Select></div>
-              <button className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white" type="submit">View</button>
-            </form>
-            <a className="rounded-md border border-border px-4 py-2 text-sm font-medium text-ink" href={pdfHref}>Download PDF</a>
-            {session.permissions.has('send_reports') && <ActionForm action={sendClassReportsToGuardians} submitLabel="Send to guardians"><input type="hidden" name="class_id" value={params.class_id ?? ''} /></ActionForm>}
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-0">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border bg-muted/30 text-muted"><tr><th className="px-3 py-3">Student</th><th className="px-3 py-3">Class</th><th className="px-3 py-3">Examination</th><th className="px-3 py-3">Average</th><th className="px-3 py-3">Division</th><th className="px-3 py-3">Position</th><th className="px-3 py-3">Status</th></tr></thead>
-            <tbody>{(data.students as any[]).flatMap((student) => (resultsByStudent.get(student.id) ?? []).map((summary: any) => { const exam = Array.isArray(summary.examinations) ? summary.examinations[0] : summary.examinations; return <tr key={`${student.id}-${summary.examination_id}`} className="border-b border-line"><td className="px-3 py-3"><p className="font-medium text-ink">{student.admission_number} · {student.first_name} {student.last_name}</p><p className="text-xs text-muted">Guardian: {student.guardian_name ?? 'Not provided'}</p></td><td className="px-3 py-3">{student.classes?.name ?? 'Unassigned'}</td><td className="px-3 py-3">{exam?.name ?? 'Examination'}<p className="text-xs text-muted">{exam?.term ?? ''}</p></td><td className="px-3 py-3">{summary.average_mark != null ? Number(summary.average_mark).toFixed(2) : 'Pending'}</td><td className="px-3 py-3">{summary.division ?? 'Pending'}</td><td className="px-3 py-3">{summary.position ?? 'Pending'}</td><td className="px-3 py-3">{summary.overall_status ?? 'Awaiting processing'}</td></tr>; }))}</tbody>
-          </table>
-        </div>
-        {!(data.results as any[]).length && <p className="p-4 help-text">No finalized reports are available for this selection.</p>}
-      </Card>
-    </main>
-  );
+  return <main className="space-y-6">
+    <Card><div className="flex flex-wrap items-end justify-between gap-4"><div><div className="flex items-start gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-md bg-brand font-display font-semibold text-white">ED</div><div><p className="text-lg font-semibold text-ink">{school?.name ?? session.school!.name}</p><p className="help-text">{schoolLine}</p><p className="help-text">{[school?.phone, school?.email].filter(Boolean).join(' · ')}</p></div></div>{school?.motto && <p className="mt-3 border-l-2 border-brand pl-3 text-sm italic text-muted">{school.motto}</p>}<h2 className="mt-4 text-xl font-semibold text-ink">Individual student reports</h2><p className="help-text mt-1">Structured report cards using the school registration details and configured grading results.</p></div><div className="flex flex-wrap items-end gap-2"><form method="get" className="flex flex-wrap items-end gap-2"><div><label className="label-text" htmlFor="class_id">Class</label><Select id="class_id" name="class_id" defaultValue={params.class_id ?? ''}><option value="">All classes</option>{(data.classes as any[]).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div><div><label className="label-text" htmlFor="examination_id">Examination</label><Select id="examination_id" name="examination_id" defaultValue={params.examination_id ?? ''}><option value="">All examinations</option>{(data.examinations as any[]).map((item) => <option key={item.id} value={item.id}>{item.name} ({item.term})</option>)}</Select></div><button className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white" type="submit">View</button></form><a className="rounded-md border border-border px-4 py-2 text-sm font-medium text-ink" href={pdfHref}>Download PDF</a>{session.permissions.has('send_reports') && <ActionForm action={sendClassReportsToGuardians} submitLabel="Send to guardians"><input type="hidden" name="class_id" value={params.class_id ?? ''} /></ActionForm>}</div></div></Card>
+    <div className="grid gap-6 xl:grid-cols-2">{(data.students as any[]).map((student) => { const summaries = resultsByStudent.get(student.id) ?? []; return <Card key={student.id} className="overflow-hidden p-0"><div className="border-b border-border bg-paper/70 p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-brand-dark">Student report card</p><h3 className="mt-1 text-lg font-semibold text-ink">{student.first_name} {student.last_name}</h3><p className="help-text">Admission No. {student.admission_number} · Class: {student.classes?.name ?? 'Unassigned'}</p></div><div className="text-right text-sm text-muted"><p>Guardian</p><p className="font-medium text-ink">{student.guardian_name ?? 'Not provided'}</p></div></div></div><div className="space-y-5 p-5">{summaries.map((summary: any) => { const exam = Array.isArray(summary.examinations) ? summary.examinations[0] : summary.examinations; const marks = marksByResult.get(`${student.id}-${summary.examination_id}`) ?? []; return <section key={`${student.id}-${summary.examination_id}`}><div className="mb-3 flex flex-wrap items-end justify-between gap-2"><div><h4 className="font-semibold text-ink">{exam?.name ?? 'Examination'}</h4><p className="text-xs text-muted">{exam?.term ?? ''}</p></div><span className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-ink">{summary.overall_status ?? summary.status ?? 'Pending'}</span></div><div className="overflow-x-auto rounded-md border border-border"><table className="min-w-full text-left text-sm"><thead className="bg-ink text-white"><tr><th className="px-3 py-2">Subject</th><th className="px-3 py-2">Mark</th><th className="px-3 py-2">Grade</th><th className="px-3 py-2">Points</th><th className="px-3 py-2">Remark</th></tr></thead><tbody>{marks.map((mark, index) => <tr key={`${mark.subject_id ?? index}-${mark.score}`} className="border-b border-line"><td className="px-3 py-2">{mark.subjects?.name ?? 'Subject'}</td><td className="px-3 py-2 font-semibold">{mark.score ?? 'Missing'}</td><td className="px-3 py-2">{mark.grade ?? 'Pending'}</td><td className="px-3 py-2">{mark.points ?? 'Pending'}</td><td className="px-3 py-2">{mark.remark ?? '—'}</td></tr>)}</tbody></table></div><div className="mt-3 grid gap-2 border-t border-border pt-3 text-sm sm:grid-cols-2"><span>Total <strong>{summary.total_marks ?? 'Pending'}</strong></span><span>Average <strong>{summary.average_mark != null ? Number(summary.average_mark).toFixed(2) : 'Pending'}</strong></span><span>Aggregate points <strong>{summary.aggregate ?? 'Pending'}</strong></span><span>Division <strong>{summary.division ?? 'Pending'}</strong></span><span>Position <strong>{summary.position ?? 'Pending'}</strong></span><span>Subjects passed <strong>{summary.pass_count ?? 'Pending'}</strong></span></div></section>; })}{!summaries.length && <p className="help-text">No result has been processed for this student.</p>}</div><div className="border-t border-border px-5 py-3 text-xs text-muted">{school?.name ?? session.school!.name} · {schoolLine}</div></Card>; })}</div>{!(data.students as any[]).length && <Card><p className="help-text">No students match the selected filters.</p></Card>}</main>;
 }

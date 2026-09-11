@@ -1,78 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { requirePermission } from '@/lib/permissions/session';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
 import { Select } from '@/components/ui/field';
 import { loadStudentReports } from '@/lib/reports/student-reports';
+import { ClassResultsTable } from '@/components/exams/class-results-table';
 
-export default async function ClassResultsPage({ searchParams }: { searchParams: Promise<{ class_id?: string }> }) {
+export default async function ClassResultsPage({ searchParams }: { searchParams: Promise<{ class_id?: string; examination_id?: string; academic_year_id?: string; term?: string; education_level_id?: string; stream_id?: string; gender?: string; status?: string }> }) {
   const session = await requirePermission('view_exams');
   const params = await searchParams;
-  const data = await loadStudentReports(session.school!.id, params.class_id);
+  const supabase = await createServerSupabaseClient();
+  const [{ data: levels }, { data: streams }] = await Promise.all([
+    supabase.from('education_levels').select('id, name').eq('school_id', session.school!.id).order('order_index'),
+    supabase.from('streams').select('id, name, class_id').eq('school_id', session.school!.id).order('name'),
+  ]);
+  const data = await loadStudentReports(session.school!.id, params.class_id, params.examination_id, { streamId: params.stream_id, gender: params.gender, educationLevelId: params.education_level_id, academicYearId: params.academic_year_id, term: params.term });
+  const activeExaminationId = params.examination_id ?? (data.examinations as any[])[0]?.id;
+  const selectedExam = (data.examinations as any[]).find((exam) => exam.id === activeExaminationId);
+  const selectedYear = params.academic_year_id ? (data.examinations as any[]).find((exam) => exam.academic_year_id === params.academic_year_id) : selectedExam;
+  const visibleResults = (data.results as any[]).filter((result) => result.examination_id === activeExaminationId && (!params.status || result.status === params.status));
   const studentsById = new Map((data.students as any[]).map((student) => [student.id, student]));
   const marksByResult = new Map<string, any[]>();
+  for (const mark of (data.marks as any[]).filter((item) => item.examination_id === activeExaminationId)) { const key = `${mark.student_id}-${mark.examination_id}`; marksByResult.set(key, [...(marksByResult.get(key) ?? []), mark]); }
+  const subjectMap = new Map<string, string>();
+  for (const mark of (data.marks as any[]).filter((item) => item.examination_id === activeExaminationId)) { const subject = Array.isArray(mark.subjects) ? mark.subjects[0] : mark.subjects; if (mark.subject_id) subjectMap.set(mark.subject_id, subject?.name ?? 'Subject'); }
+  const subjects = [...subjectMap.entries()].map(([id, name]) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name));
+  const rows = visibleResults.map((result: any) => { const student = studentsById.get(result.student_id); const marks = marksByResult.get(`${result.student_id}-${result.examination_id}`) ?? []; const subjectMarks: Record<string, any> = {}; for (const mark of marks) subjectMarks[mark.subject_id] = mark; return { id: `${result.student_id}-${result.examination_id}`, studentId: result.student_id, examinationId: result.examination_id, admissionNumber: student?.admission_number ?? '—', name: `${student?.first_name ?? ''} ${student?.last_name ?? ''}`.trim() || 'Unnamed student', className: student?.classes?.name ?? 'Unassigned', subjects: subjectMarks, total: result.total_marks == null ? null : Number(result.total_marks), average: result.average_mark == null ? null : Number(result.average_mark), points: result.aggregate == null ? null : Number(result.aggregate), division: result.division ?? null, position: result.position == null ? null : Number(result.position), status: result.overall_status ?? result.status ?? 'Incomplete' }; });
+  const query = (extra: Record<string, string>) => { const values = { ...params, ...extra }; return Object.entries(values).filter(([, value]) => value).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`).join('&'); };
+  const canEdit = session.permissions.has('enter_marks') || session.permissions.has('publish_results');
 
-  for (const mark of data.marks as any[]) {
-    const key = `${mark.student_id}-${mark.examination_id}`;
-    marksByResult.set(key, [...(marksByResult.get(key) ?? []), mark]);
-  }
-
-  const school = data.school;
-  const schoolLine = [school?.address, school?.region, school?.district].filter(Boolean).join(', ') || 'School details not configured';
-
-  return (
-    <main className="space-y-6">
-      <Card>
-        <div className="border-b border-border pb-4">
-          <p className="text-lg font-semibold text-ink">{school?.name ?? session.school!.name}</p>
-          <p className="help-text">{schoolLine}{school?.phone ? ` · ${school.phone}` : ''}{school?.email ? ` · ${school.email}` : ''}</p>
-          {school?.motto && <p className="help-text italic">{school.motto}</p>}
-        </div>
-        <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-ink">Class results</h2>
-            <p className="help-text mt-1">{data.selectedClass?.name ?? 'All classes'} · A roster of marks and calculated results.</p>
-          </div>
-          <form method="get" className="flex items-end gap-2">
-            <div>
-              <label className="label-text" htmlFor="class_id">Class</label>
-              <Select id="class_id" name="class_id" defaultValue={params.class_id ?? ''}>
-                <option value="">All classes</option>
-                {(data.classes as any[]).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </Select>
-            </div>
-            <button className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white" type="submit">View</button>
-          </form>
-        </div>
-      </Card>
-
-      <Card className="p-0">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border bg-muted/30 text-muted">
-              <tr>
-                <th className="px-3 py-3">Student</th><th className="px-3 py-3">Examination</th><th className="px-3 py-3">Subjects</th>
-                <th className="px-3 py-3">Total</th><th className="px-3 py-3">Average</th><th className="px-3 py-3">Division</th><th className="px-3 py-3">Position</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data.results as any[]).map((result) => {
-                const student = studentsById.get(result.student_id);
-                const exam = Array.isArray(result.examinations) ? result.examinations[0] : result.examinations;
-                const marks = marksByResult.get(`${result.student_id}-${result.examination_id}`) ?? [];
-                return <tr key={`${result.student_id}-${result.examination_id}`} className="border-b border-line align-top">
-                  <td className="px-3 py-3"><p className="font-medium text-ink">{student?.first_name} {student?.last_name}</p><p className="text-xs text-muted">{student?.admission_number ?? 'No admission number'} · {student?.classes?.name ?? 'Unassigned'}</p></td>
-                  <td className="px-3 py-3">{exam?.name ?? 'Examination'}<p className="text-xs text-muted">{exam?.term ?? ''}</p></td>
-                  <td className="max-w-sm px-3 py-3"><div className="flex flex-wrap gap-1">{marks.map((mark, index) => <span key={`${mark.subject_id ?? index}-${mark.score}`} className="rounded border border-border px-2 py-1 text-xs">{mark.subjects?.name ?? 'Subject'}: {mark.score ?? 'Pending'}{mark.grade ? ` (${mark.grade})` : ''}</span>)}</div></td>
-                  <td className="px-3 py-3">{result.total_marks ?? (marks.length ? marks.reduce((sum, mark) => sum + Number(mark.score ?? 0), 0) : 'Pending')}</td>
-                  <td className="px-3 py-3">{result.average_mark != null ? Number(result.average_mark).toFixed(2) : 'Pending'}</td>
-                  <td className="px-3 py-3">{result.division ?? 'Pending'}</td>
-                  <td className="px-3 py-3 font-semibold">{result.position ?? 'Pending'}</td>
-                </tr>;
-              })}
-            </tbody>
-          </table>
-        </div>
-        {!(data.results as any[]).length && <p className="p-4 help-text">No marks or processed results are available for this class.</p>}
-      </Card>
-    </main>
-  );
+  return <main className="space-y-6"><Card><div className="border-b border-border pb-4"><p className="text-lg font-semibold text-ink">{data.school?.name ?? session.school!.name}</p><p className="help-text">{[data.school?.address, data.school?.region, data.school?.district].filter(Boolean).join(', ') || 'School details not configured'}</p></div><div className="mt-5"><h2 className="text-xl font-semibold text-ink">Class results sheet</h2><p className="help-text mt-1">One learner per row and one subject per column. Marks and grades use the existing examination calculation and grading configuration.</p></div><form method="get" className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"><Filter label="Academic year" name="academic_year_id" value={params.academic_year_id} options={[...new Map((data.examinations as any[]).map((exam) => [exam.academic_year_id, exam.academic_years?.name ?? exam.academic_year_id])).entries()].filter(([id]) => id).map(([id, name]) => [id, name])} /><Filter label="Term" name="term" value={(selectedExam as any)?.term} options={[...new Set((data.examinations as any[]).map((exam) => exam.term))].map((term) => [term, term])} /><Filter label="Examination" name="examination_id" value={params.examination_id ?? activeExaminationId} options={(data.examinations as any[]).map((exam) => [exam.id, exam.name])} /><Filter label="Education level" name="education_level_id" value={params.education_level_id} options={(levels ?? []).map((item) => [item.id, item.name])} /><Filter label="Class" name="class_id" value={params.class_id} options={(data.classes as any[]).map((item) => [item.id, item.name])} /><Filter label="Stream" name="stream_id" value={params.stream_id} options={(streams ?? []).map((item) => [item.id, item.name])} /><Filter label="Gender" name="gender" value={params.gender} options={[["female", "Female"], ["male", "Male"], ["other", "Other"]]} /><Filter label="Result status" name="status" value={params.status} options={[["DRAFT", "Draft"], ["CALCULATED", "Calculated"], ["REVIEWED", "Reviewed"], ["APPROVED", "Approved"], ["PUBLISHED", "Published"]]} /><div className="flex items-end"><button type="submit" className="h-10 w-full rounded-md bg-brand px-4 text-sm font-medium text-white">Apply filters</button></div></form><p className="help-text mt-3">{selectedYear?.academic_years?.name ?? 'All academic years'} · {selectedExam ? `${selectedExam.name} · ${selectedExam.term}` : 'No examination selected'} · {data.selectedClass?.name ?? 'All classes'} · {rows.length} students</p></Card><Card className="p-0"><div className="p-4"><ClassResultsTable rows={rows} subjects={subjects} examinationId={activeExaminationId} classId={params.class_id} canEdit={canEdit} /></div></Card></main>;
 }
+
+function Filter({ label, name, value, options }: { label: string; name: string; value?: string; options: [string, string][] }) { return <div><label className="label-text" htmlFor={name}>{label}</label><Select id={name} name={name} defaultValue={value ?? ''}><option value="">All</option>{options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}</Select></div>; }

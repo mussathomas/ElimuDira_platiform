@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       page.drawText(text.slice(0, 105), { x: 42, y, size, font: isBold ? bold : font, color: rgb(0.08, 0.12, 0.16) });
       y -= size + 6;
     };
-    draw(data.school?.name ?? 'School', 17, true);
+    draw(data.school?.name ?? session.school!.name, 17, true);
     draw([data.school?.address, data.school?.region, data.school?.district].filter(Boolean).join(', '), 9);
     draw([data.school?.phone, data.school?.email].filter(Boolean).join(' · '), 9);
     draw(data.school?.motto ?? '', 9);
