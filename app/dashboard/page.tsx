@@ -43,7 +43,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-ink">Welcome back, {session.fullName.split(' ')[0]}</h2>
-        <p className="help-text">Here's what's happening at {session.school.name} today.</p>
+        <p className="help-text">Here&apos;s what&apos;s happening at {session.school.name} today.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

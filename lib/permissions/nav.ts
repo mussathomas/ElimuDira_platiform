@@ -6,6 +6,7 @@ export interface NavLeaf {
 
 export interface NavSection {
   label: string;
+  icon?: string;
   href?: string; // present when the section itself is also a page (e.g. Dashboard)
   permission?: string;
   children?: NavLeaf[];
@@ -13,9 +14,10 @@ export interface NavSection {
 
 /** School-workspace sidebar. Mirrors the structure in the product brief. */
 export const schoolNav: NavSection[] = [
-  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Dashboard', icon: 'LayoutDashboard', href: '/dashboard' },
   {
     label: 'Students',
+    icon: 'Users',
     permission: 'view_students',
     children: [
       { label: 'All Students', href: '/dashboard/students', permission: 'view_students' },
@@ -25,6 +27,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Admin Manager',
+    icon: 'ShieldCheck',
     children: [
       { label: 'Manage Staff', href: '/dashboard/staff', permission: 'view_staff' },
       { label: 'Roles', href: '/dashboard/staff/roles', permission: 'manage_roles' },
@@ -34,6 +37,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Attendance',
+    icon: 'CalendarCheck',
     children: [
       { label: 'Class Attendance', href: '/dashboard/attendance/class', permission: 'mark_attendance' },
       { label: 'Personal Attendance', href: '/dashboard/attendance/personal', permission: 'view_attendance' },
@@ -43,6 +47,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Syllabus Progress',
+    icon: 'BookOpen',
     permission: 'view_syllabus',
     children: [
       { label: 'Overview', href: '/dashboard/syllabus', permission: 'view_syllabus' },
@@ -53,6 +58,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Exams & Reports',
+    icon: 'ClipboardCheck',
     children: [
       { label: 'Examinations', href: '/dashboard/exams', permission: 'create_exam' },
       { label: 'Marks', href: '/dashboard/exams/marks', permission: 'enter_marks' },
@@ -63,6 +69,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Timetable',
+    icon: 'CalendarDays',
     permission: 'view_timetable',
     children: [
       { label: 'Overview', href: '/dashboard/timetable', permission: 'view_timetable' },
@@ -81,6 +88,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Finance',
+    icon: 'WalletCards',
     permission: 'view_finance',
     children: [
       { label: 'Finance Overview', href: '/dashboard/finance', permission: 'view_finance' },
@@ -91,6 +99,7 @@ export const schoolNav: NavSection[] = [
   },
   {
     label: 'Letters & Documents',
+    icon: 'FileText',
     permission: 'view_documents',
     children: [
       { label: 'Templates', href: '/dashboard/letters/templates', permission: 'generate_document' },
@@ -98,9 +107,10 @@ export const schoolNav: NavSection[] = [
       { label: 'Certificates', href: '/dashboard/letters/certificates', permission: 'generate_document' },
     ],
   },
-  { label: 'Notifications', href: '/dashboard/notifications' },
+  { label: 'Notifications', icon: 'Bell', href: '/dashboard/notifications' },
   {
     label: 'Settings',
+    icon: 'Settings',
     permission: 'edit_settings',
     children: [
       { label: 'School Settings', href: '/dashboard/settings/school', permission: 'edit_settings' },
@@ -114,9 +124,10 @@ export const schoolNav: NavSection[] = [
 
 /** Platform (Super Admin) sidebar — entirely separate from the school sidebar. */
 export const platformNav: NavSection[] = [
-  { label: 'Dashboard', href: '/platform' },
+  { label: 'Dashboard', icon: 'LayoutDashboard', href: '/platform' },
   {
     label: 'Schools',
+    icon: 'School',
     children: [
       { label: 'All Schools', href: '/platform/schools' },
       { label: 'Register School', href: '/platform/schools/register' },
@@ -124,10 +135,10 @@ export const platformNav: NavSection[] = [
       { label: 'Suspended Schools', href: '/platform/schools?status=suspended' },
     ],
   },
-  { label: 'Platform Analytics', href: '/platform/analytics' },
-  { label: 'Platform Users', href: '/platform/users' },
-  { label: 'System Audit', href: '/platform/audit' },
-  { label: 'Platform Settings', href: '/platform/settings' },
+  { label: 'Platform Analytics', icon: 'BarChart3', href: '/platform/analytics' },
+  { label: 'Platform Users', icon: 'UserRound', href: '/platform/users' },
+  { label: 'System Audit', icon: 'ScrollText', href: '/platform/audit' },
+  { label: 'Platform Settings', icon: 'Settings', href: '/platform/settings' },
 ];
 
 /** Flat lookup for resolving the selected module or submodule from the URL. */

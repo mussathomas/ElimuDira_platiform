@@ -17,7 +17,7 @@ export default function RegisterPage() {
     <Card>
       <h1 className="mb-1 font-display text-2xl font-medium text-ink">Register your school</h1>
       <p className="help-text mb-6">
-        Set up your school's own ElimuDira workspace. This creates your administrator account and a setup wizard
+        Set up your school&apos;s own ElimuDira workspace. This creates your administrator account and a setup wizard
         will walk you through the rest.
       </p>
 

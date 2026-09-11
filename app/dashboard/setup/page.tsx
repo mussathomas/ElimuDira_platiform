@@ -138,7 +138,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
       {step === 8 && (
         <Card>
-          <h2 className="mb-1 text-lg font-semibold text-ink">You're all set</h2>
+          <h2 className="mb-1 text-lg font-semibold text-ink">You&apos;re all set</h2>
           <p className="help-text mb-4">
             {session.school.name} is ready to go. You can still adjust any of this later from Settings.
           </p>

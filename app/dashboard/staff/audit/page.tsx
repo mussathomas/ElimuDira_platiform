@@ -22,7 +22,7 @@ export default async function SchoolAuditPage({ searchParams }: { searchParams: 
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-semibold text-ink">Audit log</h2>
-        <p className="help-text">Read-only record of sensitive actions taken in your school's workspace.</p>
+        <p className="help-text">Read-only record of sensitive actions taken in your school&apos;s workspace.</p>
       </div>
 
       <Card className="p-0">

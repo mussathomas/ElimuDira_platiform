@@ -35,6 +35,8 @@ const structureSchema = z.object({
   due_date: z.string().optional().or(z.literal('')),
 });
 
+type FeeStructure = { id: string; name: string; amount: number; due_date: string | null };
+
 export async function createFeeStructure(formData: FormData): Promise<ActionResult> {
   const session = await requirePermission('create_payment');
   const parsed = structureSchema.safeParse(Object.fromEntries(formData));
@@ -66,11 +68,11 @@ export async function createFeeAssessment(formData: FormData): Promise<ActionRes
   const supabase = await createServerSupabaseClient();
   const { data: student } = await supabase.from('students').select('id, class_id').eq('id', parsed.data.student_id).eq('class_id', parsed.data.class_id).eq('school_id', session.school!.id).maybeSingle();
   if (!student) return { ok: false, error: 'Student not found in this school.' };
-  let structure: { id: string; name: string; amount: number; due_date: string | null } | null = null;
+  let structure: FeeStructure | null = null;
   if (parsed.data.fee_structure_id) {
     const { data } = await supabase.from('fee_structures').select('id, name, amount, due_date, class_id').eq('id', parsed.data.fee_structure_id).eq('school_id', session.school!.id).eq('active', true).maybeSingle();
     if (!data || (data.class_id && data.class_id !== parsed.data.class_id)) return { ok: false, error: 'Fee structure is not available for this class.' };
-    structure = data as typeof structure;
+    structure = data as unknown as FeeStructure;
   }
   if (!structure && (!parsed.data.description || !parsed.data.amount)) return { ok: false, error: 'Enter a custom fee description and amount, or choose a fee structure.' };
   if (parsed.data.academic_year_id) {

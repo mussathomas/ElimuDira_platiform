@@ -3,7 +3,24 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, LayoutDashboard } from 'lucide-react';
+import {
+  BarChart3,
+  Bell,
+  BookOpen,
+  CalendarCheck,
+  CalendarDays,
+  ChevronDown,
+  ClipboardCheck,
+  FileText,
+  LayoutDashboard,
+  School,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  UserRound,
+  Users,
+  WalletCards,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NavSection } from '@/lib/permissions/nav';
 
@@ -18,6 +35,24 @@ function isVisible(permission: string | undefined, permissions: Set<string>, isS
   if (!permission) return true;
   return isSuperAdmin || permissions.has(permission);
 }
+
+const icons = {
+  BarChart3,
+  Bell,
+  BookOpen,
+  CalendarCheck,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  LayoutDashboard,
+  School,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  UserRound,
+  Users,
+  WalletCards,
+};
 
 export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarProps) {
   const pathname = usePathname();
@@ -65,15 +100,17 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
             // Leaf-level section (e.g. Dashboard) — no children, just a link.
             if (!section.children) {
               const active = pathname === section.href;
+              const Icon = icons[section.icon as keyof typeof icons] ?? LayoutDashboard;
               return (
                 <li key={section.label}>
                   <Link
                     href={section.href!}
                     className={cn(
-                      'block rounded-md px-3 py-2 text-sm font-medium',
+                      'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
                       active ? 'bg-brand-light text-brand-dark' : 'text-ink-soft hover:bg-paper'
                     )}
                   >
+                    <Icon size={16} strokeWidth={1.8} />
                     {section.label}
                   </Link>
                 </li>
@@ -86,6 +123,7 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
             if (visibleChildren.length === 0) return null;
 
             const isOpen = openSections.has(section.label);
+            const Icon = icons[section.icon as keyof typeof icons] ?? LayoutDashboard;
 
             return (
               <li key={section.label}>
@@ -95,11 +133,11 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
                   className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-paper"
                   aria-expanded={isOpen}
                 >
-                  {section.label}
-                  <ChevronDown
-                    size={15}
-                    className={cn('transition-transform', isOpen && 'rotate-180')}
-                  />
+                  <span className="flex items-center gap-2">
+                    <Icon size={16} strokeWidth={1.8} />
+                    {section.label}
+                  </span>
+                  <ChevronDown size={15} className={cn('transition-transform', isOpen && 'rotate-180')} />
                 </button>
                 {isOpen && (
                   <ul className="ml-2 mt-0.5 space-y-0.5 border-l border-line pl-3">
