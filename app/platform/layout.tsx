@@ -7,16 +7,16 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const session = await requireSuperAdmin();
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen">
       <Sidebar
         sections={platformNav}
         permissions={session.permissions}
         isSuperAdmin={true}
         brand={{ title: 'ElimuDira', subtitle: 'Platform Admin' }}
       />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar title="Platform administration" userName={session.fullName} roleName="Super Admin" />
-        <main className="flex-1 overflow-y-auto bg-paper p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-paper p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

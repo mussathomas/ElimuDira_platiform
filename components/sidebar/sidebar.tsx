@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   FileText,
   LayoutDashboard,
+  Menu,
   School,
   ScrollText,
   Settings,
@@ -20,6 +21,7 @@ import {
   UserRound,
   Users,
   WalletCards,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { NavSection } from '@/lib/permissions/nav';
@@ -56,6 +58,7 @@ const icons = {
 
 export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarProps) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = React.useState(false);
 
   // A section starts expanded if the active route lives inside it.
   const [openSections, setOpenSections] = React.useState<Set<string>>(() => {
@@ -75,8 +78,33 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
       return next;
     });
 
+  React.useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
-    <nav className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-white">
+    <>
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-md border border-border bg-white text-ink shadow-sm md:hidden"
+        aria-label="Open navigation"
+        aria-expanded={mobileOpen}
+      >
+        <Menu size={19} />
+      </button>
+      {mobileOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-ink/30 md:hidden"
+          aria-label="Close navigation"
+        />
+      )}
+      <nav className={cn(
+        'fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] flex-col border-r border-border bg-white shadow-xl transition-transform duration-200 md:static md:z-auto md:h-full md:w-64 md:shrink-0 md:translate-x-0 md:shadow-none',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
       <div className="flex items-center gap-2 border-b border-border px-5 py-4">
         <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-brand text-white">
           {brand.logoUrl ? (
@@ -90,6 +118,14 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
           <p className="text-sm font-semibold leading-tight text-ink">{brand.title}</p>
           {brand.subtitle && <p className="text-xs leading-tight text-muted">{brand.subtitle}</p>}
         </div>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(false)}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-ink-soft hover:bg-paper md:hidden"
+          aria-label="Close navigation"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-4">
@@ -166,6 +202,7 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
           })}
         </ul>
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }
