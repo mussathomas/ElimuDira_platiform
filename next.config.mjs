@@ -7,9 +7,13 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: projectRoot,
-  webpack: (config, { dev }) => {
-    if (dev) config.cache = false;
-    return config;
+  async redirects() {
+    return [
+      { source: '/dashboard/finance/fee-structures', destination: '/dashboard/finance#assessments', permanent: false },
+      { source: '/dashboard/finance/payments', destination: '/dashboard/finance#payments', permanent: false },
+      { source: '/dashboard/finance/outstanding', destination: '/dashboard/finance#balances', permanent: false },
+      { source: '/dashboard/finance/reports', destination: '/dashboard/finance', permanent: false },
+    ];
   },
   images: {
     remotePatterns: [

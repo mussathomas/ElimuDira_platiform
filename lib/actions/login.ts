@@ -1,7 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const loginSchema = z.object({
@@ -9,7 +8,7 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Enter your password'),
 });
 
-export type LoginResult = { ok: true } | { ok: false; error: string };
+export type LoginResult = { ok: true; redirectTo: string } | { ok: false; error: string };
 
 export async function loginUser(_prev: LoginResult | null, formData: FormData): Promise<LoginResult> {
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
@@ -54,5 +53,8 @@ export async function loginUser(_prev: LoginResult | null, formData: FormData): 
     };
   }
 
-  redirect(platformAdmin ? '/platform' : '/dashboard');
+  const requestedRedirect = String(formData.get('redirectTo') ?? '').trim();
+  const redirectTo = requestedRedirect.startsWith('/') ? requestedRedirect : platformAdmin ? '/platform' : '/dashboard';
+
+  return { ok: true, redirectTo };
 }

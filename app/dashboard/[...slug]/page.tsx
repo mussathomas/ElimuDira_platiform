@@ -20,5 +20,16 @@ export default async function ModuleWorkspacePage({ params }: { params: Promise<
     );
   }
 
-  return <ModuleWorkspace config={getSchoolWorkspace(href, leaf.label)} />;
+  let counts: { staffCount?: number; roleCount?: number; permissionCount?: number } | undefined;
+  if (href === '/dashboard/staff') {
+    const supabase = await import('@/lib/supabase/server').then((m) => m.createServerSupabaseClient());
+    const [{ count: staffCount }, { count: roleCount }, { count: permissionCount }] = await Promise.all([
+      supabase.from('staff_members').select('*', { count: 'exact', head: true }).eq('school_id', session.school.id),
+      supabase.from('roles').select('*', { count: 'exact', head: true }).eq('school_id', session.school.id),
+      supabase.from('permissions').select('*', { count: 'exact', head: true }),
+    ]);
+    counts = { staffCount: staffCount ?? 0, roleCount: roleCount ?? 0, permissionCount: permissionCount ?? 0 };
+  }
+
+  return <ModuleWorkspace config={getSchoolWorkspace(href, leaf.label, counts)} />;
 }

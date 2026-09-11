@@ -11,14 +11,39 @@ const schoolWorkspaces: Record<string, ModuleWorkspaceConfig> = {
     title: 'Attendance', description: 'Record daily attendance and follow up on absences by class and staff member.', primaryAction: { label: 'Mark attendance', href: '/dashboard/attendance/class' }, metrics: [{ label: 'Today', value: '0%', detail: 'No attendance recorded' }, { label: 'Present', value: '0', detail: 'Awaiting today\'s register' }, { label: 'Absent', value: '0', detail: 'No absences recorded' }], sections: [{ title: 'Class attendance', description: 'Take today\'s register for a class.', href: '/dashboard/attendance/class', action: 'Take register' }, { title: 'History', description: 'Review attendance trends and previous registers.', href: '/dashboard/attendance/history', action: 'Open history' }],
   },
   '/dashboard/finance': {
-    title: 'Finance', description: 'Set up fee structures, record payments, and monitor outstanding balances.', primaryAction: { label: 'Record payment', href: '/dashboard/finance/payments' }, metrics: [{ label: 'Collected', value: '0', detail: 'No payments recorded' }, { label: 'Outstanding', value: '0', detail: 'No fee balances yet' }, { label: 'Reports', value: '0', detail: 'No financial reports' }], sections: [{ title: 'Fee structures', description: 'Define what learners should pay.', href: '/dashboard/finance/fee-structures', action: 'Open fee structures' }, { title: 'Payments', description: 'Record and review received payments.', href: '/dashboard/finance/payments', action: 'Open payments' }],
+    title: 'Finance', description: 'Assess fees, record payments, and monitor outstanding balances.', primaryAction: { label: 'Open finance ledger', href: '/dashboard/finance' }, metrics: [], sections: [{ title: 'Fee assessments', description: 'Create charges for active learners from the finance ledger.', href: '/dashboard/finance#assessments', action: 'Open assessments' }, { title: 'Payments and balances', description: 'Record receipts and review learner balances.', href: '/dashboard/finance#payments', action: 'Open payments' }],
   },
   '/dashboard/letters': {
     title: 'Letters & documents', description: 'Create reusable templates and generate school documents from structured records.', primaryAction: { label: 'Create template', href: '/dashboard/letters/templates' }, metrics: [{ label: 'Templates', value: '0', detail: 'No templates created' }, { label: 'Documents', value: '0', detail: 'No documents generated' }, { label: 'Certificates', value: '0', detail: 'No certificates generated' }], sections: [{ title: 'Templates', description: 'Build templates for letters and certificates.', href: '/dashboard/letters/templates', action: 'Open templates' }, { title: 'Generated documents', description: 'Find and download generated files.', href: '/dashboard/letters', action: 'Open documents' }],
   },
 };
 
-export function getSchoolWorkspace(href: string, label: string): ModuleWorkspaceConfig {
+export function getSchoolWorkspace(
+  href: string,
+  label: string,
+  counts?: { staffCount?: number; roleCount?: number; permissionCount?: number }
+): ModuleWorkspaceConfig {
+  if (href === '/dashboard/staff') {
+    const staffCount = counts?.staffCount ?? 0;
+    const roleCount = counts?.roleCount ?? 0;
+    const permissionCount = counts?.permissionCount ?? 0;
+
+    return {
+      title: 'Staff',
+      description: 'Organize staff records, positions, and access to the school workspace.',
+      primaryAction: { label: 'Manage roles', href: '/dashboard/staff/roles' },
+      metrics: [
+        { label: 'Staff members', value: String(staffCount), detail: staffCount === 1 ? '1 active staff member' : `${staffCount} active staff members` },
+        { label: 'Roles', value: String(roleCount), detail: roleCount === 1 ? '1 role configured' : `${roleCount} roles configured` },
+        { label: 'Permissions', value: String(permissionCount), detail: permissionCount === 1 ? '1 permission in the catalog' : `${permissionCount} permissions in the catalog` },
+      ],
+      sections: [
+        { title: 'Users', description: 'Review staff accounts and access.', href: '/dashboard/staff/users', action: 'Open users' },
+        { title: 'Roles & permissions', description: 'Configure what each role can do.', href: '/dashboard/staff/roles', action: 'Open role matrix' },
+      ],
+    };
+  }
+
   return schoolWorkspaces[href] ?? {
     title: label, description: `Manage ${label.toLowerCase()} for your school from this workspace.`, metrics: [{ label: 'Records', value: '0', detail: 'No records yet' }, { label: 'This term', value: '0', detail: 'No activity yet' }, { label: 'Status', value: 'Ready', detail: 'Workspace available' }], sections: [{ title: label, description: 'Use this workspace to review and manage records for this area.', href, action: 'Open workspace' }],
   };

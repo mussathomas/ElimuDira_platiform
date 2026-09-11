@@ -20,21 +20,27 @@ const BENEFITS = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-paper">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand font-display text-sm text-white">
-            ED
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-paper/85 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand font-display text-sm text-white">
+              ED
+            </div>
+            <span className="font-display text-lg font-medium text-ink">ElimuDira</span>
           </div>
-          <span className="font-display text-lg font-medium text-ink">ElimuDira</span>
+          <nav className="flex items-center gap-3">
+            <Link href="/login" prefetch={true} className="px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink">
+              Login
+            </Link>
+            <Link
+              href="/register"
+              prefetch={true}
+              className="inline-flex h-8 items-center justify-center rounded-md bg-brand px-3 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+            >
+              Register Your School
+            </Link>
+          </nav>
         </div>
-        <nav className="flex items-center gap-3">
-          <Link href="/login" className="px-3 py-2 text-sm font-medium text-ink-soft hover:text-ink">
-            Login
-          </Link>
-          <Link href="/register">
-            <Button size="sm">Register Your School</Button>
-          </Link>
-        </nav>
       </header>
 
       <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:py-24">
@@ -50,11 +56,19 @@ export default function LandingPage() {
             and guardian communication — set up in minutes, not months.
           </p>
           <div className="mt-8 flex gap-3">
-            <Link href="/register">
-              <Button size="lg">Register Your School</Button>
+            <Link
+              href="/register"
+              prefetch={true}
+              className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-6 text-base font-medium text-white transition-colors hover:bg-brand-dark"
+            >
+              Register Your School
             </Link>
-            <Link href="/login">
-              <Button size="lg" variant="secondary">Login</Button>
+            <Link
+              href="/login"
+              prefetch={true}
+              className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-white px-6 text-base font-medium text-ink transition-colors hover:bg-paper"
+            >
+              Login
             </Link>
           </div>
         </div>
@@ -102,8 +116,12 @@ export default function LandingPage() {
           <p className="help-text max-w-md">
             Registration takes a few minutes. Your setup wizard walks you through the rest.
           </p>
-          <Link href="/register">
-            <Button size="lg">Register Your School</Button>
+          <Link
+            href="/register"
+            prefetch={true}
+            className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-6 text-base font-medium text-white transition-colors hover:bg-brand-dark"
+          >
+            Register Your School
           </Link>
         </Card>
       </section>

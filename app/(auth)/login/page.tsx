@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,16 @@ import { Button } from '@/components/ui/button';
 import { loginUser, type LoginResult } from '@/lib/actions/login';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard';
   const [state, formAction, pending] = useActionState<LoginResult | null, FormData>(loginUser, null);
+
+  useEffect(() => {
+    if (state && state.ok) {
+      router.push(state.redirectTo || redirectTo);
+    }
+  }, [redirectTo, router, state]);
 
   return (
     <Card>
@@ -17,6 +27,8 @@ export default function LoginPage() {
       <p className="help-text mb-6">Welcome back to your ElimuDira workspace.</p>
 
       <form action={formAction} className="space-y-4">
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+
         <div>
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" required autoComplete="email" />

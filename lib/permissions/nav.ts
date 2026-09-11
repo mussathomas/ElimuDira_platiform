@@ -85,10 +85,10 @@ export const schoolNav: NavSection[] = [
     label: 'Finance',
     permission: 'view_finance',
     children: [
-      { label: 'Fee Structures', href: '/dashboard/finance/fee-structures', permission: 'view_finance' },
-      { label: 'Payments', href: '/dashboard/finance/payments', permission: 'create_payment' },
-      { label: 'Outstanding Fees', href: '/dashboard/finance/outstanding', permission: 'view_finance' },
-      { label: 'Financial Reports', href: '/dashboard/finance/reports', permission: 'export_finance' },
+      { label: 'Finance Overview', href: '/dashboard/finance', permission: 'view_finance' },
+      { label: 'Fee Assessments', href: '/dashboard/finance#assessments', permission: 'create_payment' },
+      { label: 'Payments', href: '/dashboard/finance#payments', permission: 'create_payment' },
+      { label: 'Outstanding Balances', href: '/dashboard/finance#balances', permission: 'view_finance' },
     ],
   },
   {
