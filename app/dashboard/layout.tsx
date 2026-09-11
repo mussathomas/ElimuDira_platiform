@@ -20,12 +20,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar title={session.school.name} userName={session.fullName} roleName={session.roleName} />
         {!session.school.setupCompleted && (
-          <div className="flex items-center gap-4 border-b border-border bg-amber-light px-6 py-2.5">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-amber-light px-4 py-2.5 sm:px-6">
             <span className="text-sm font-medium text-amber-dark">
               School setup {setupPercent}% complete
             </span>
-            <Progress value={setupPercent} className="max-w-[160px]" />
-            <Link href="/dashboard/setup" className="ml-auto text-sm font-medium text-brand hover:underline">
+            <Progress value={setupPercent} className="max-w-[160px] flex-1 sm:flex-none" />
+            <Link href="/dashboard/setup" className="text-sm font-medium text-brand hover:underline sm:ml-auto">
               Continue setup
             </Link>
           </div>

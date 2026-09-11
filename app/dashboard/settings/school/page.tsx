@@ -20,7 +20,7 @@ export default async function SchoolSettingsPage() {
 
       <Card>
         <ActionForm action={updateSchoolProfile} submitLabel="Save changes">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="col-span-2">
               <Label htmlFor="name">School name</Label>
               <Input id="name" name="name" defaultValue={school?.name} required />

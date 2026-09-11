@@ -28,7 +28,7 @@ export default function RegisterPage() {
             <Label htmlFor="admin_full_name">Your full name</Label>
             <Input id="admin_full_name" name="admin_full_name" required />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="admin_email">Your email</Label>
               <Input id="admin_email" name="admin_email" type="email" required autoComplete="email" />
@@ -51,7 +51,7 @@ export default function RegisterPage() {
             <Label htmlFor="school_name">School name</Label>
             <Input id="school_name" name="school_name" required />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="school_type">School type</Label>
               <Select id="school_type" name="school_type" defaultValue="secondary" required>
@@ -74,7 +74,7 @@ export default function RegisterPage() {
               <Input id="motto" name="motto" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="region">Region</Label>
               <Input id="region" name="region" />

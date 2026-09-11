@@ -60,7 +60,7 @@ export default async function RolesPage() {
           ))}
         </ul>
         <ActionForm action={createRole} submitLabel="Add role">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="name">Role name</Label>
               <Input id="name" name="name" placeholder="e.g. Librarian" required />
@@ -77,7 +77,7 @@ export default async function RolesPage() {
         <CardHeader><CardTitle>Teacher class & subject assignments</CardTitle></CardHeader>
         <p className="help-text mb-4">Teachers can enter marks only for the classes and subjects assigned here.</p>
         <ActionForm action={assignTeacher} submitLabel="Assign teacher">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div><Label htmlFor="profile_id">Teacher account</Label><Select id="profile_id" name="profile_id" defaultValue="" required><option value="" disabled>Choose a teacher</option>{(staff ?? []).map((member) => { const profile = member.profiles as { full_name?: string; email?: string } | null; return <option key={member.profile_id} value={member.profile_id}>{profile?.full_name} · {profile?.email}</option>; })}</Select></div>
             <div><Label htmlFor="assignment_class_id">Class</Label><Select id="assignment_class_id" name="class_id" defaultValue="" required><option value="" disabled>Choose a class</option>{(classes ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
             <div><Label htmlFor="assignment_subject_id">Subject</Label><Select id="assignment_subject_id" name="subject_id" defaultValue="" required><option value="" disabled>Choose a subject</option>{(subjects ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>

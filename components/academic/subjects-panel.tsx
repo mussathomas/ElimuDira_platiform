@@ -20,7 +20,7 @@ export function SubjectsPanel({ subjects }: { subjects: Subject[] }) {
       </ul>
 
       <ActionForm action={createSubject} submitLabel="Add subject">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div className="col-span-2">
             <Label htmlFor="subject-name">Subject name</Label>
             <Input id="subject-name" name="name" placeholder="Mathematics" required />

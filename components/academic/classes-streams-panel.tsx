@@ -31,7 +31,7 @@ export function ClassesStreamsPanel({
           {classes.length === 0 && <li className="help-text py-2">No classes yet.</li>}
         </ul>
         <ActionForm action={createClass} submitLabel="Add class">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="education_level_id">Education level</Label>
               <Select id="education_level_id" name="education_level_id" required defaultValue="">
@@ -61,7 +61,7 @@ export function ClassesStreamsPanel({
           {streams.length === 0 && <li className="help-text py-2">No streams yet.</li>}
         </ul>
         <ActionForm action={createStream} submitLabel="Add stream">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="class_id">Class</Label>
               <Select id="class_id" name="class_id" required defaultValue="">

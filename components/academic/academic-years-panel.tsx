@@ -33,7 +33,7 @@ export function AcademicYearsPanel({ academicYears }: { academicYears: AcademicY
       </ul>
 
       <ActionForm action={createAcademicYear} submitLabel="Add academic year">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <Label htmlFor="year-name">Name</Label>
             <Input id="year-name" name="name" placeholder="2026" required />

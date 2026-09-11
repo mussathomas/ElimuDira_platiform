@@ -40,7 +40,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
           <h2 className="mb-1 text-lg font-semibold text-ink">School information</h2>
           <p className="help-text mb-4">Confirm the details that will appear on reports, letters and certificates.</p>
           <ActionForm action={updateSchoolProfile} submitLabel="Save & continue">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="col-span-2">
                 <Label htmlFor="name">School name</Label>
                 <Input id="name" name="name" defaultValue={school?.name} required />
