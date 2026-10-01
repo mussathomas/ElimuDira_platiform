@@ -19,6 +19,7 @@ export interface CurrentSession {
     status: 'active' | 'suspended' | 'deactivated';
   } | null;
   roleName: string | null;
+  roleIsSystem: boolean;
   permissions: Set<string>;
 }
 
@@ -39,7 +40,7 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
   const [{ data: profile }, { data: permissionRows }, { data: platformAdmin }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, email, school:schools(id, name, slug, logo_path, setup_step, setup_completed, status), role:roles(name)')
+      .select('full_name, email, school:schools(id, name, slug, logo_path, setup_step, setup_completed, status), role:roles(name, is_system)')
       .eq('id', user.id)
       .maybeSingle(),
     supabase.rpc('get_my_permission_codes'),
@@ -74,6 +75,7 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
         }
       : null,
     roleName: (profile?.role as any)?.name ?? null,
+    roleIsSystem: Boolean((profile?.role as any)?.is_system),
     permissions: new Set(
       (permissionRows as unknown[] ?? [])
         .map((row: unknown) => (typeof row === 'string' ? row : (row as { code?: string }).code))
@@ -112,6 +114,14 @@ export async function requirePermission(code: string): Promise<CurrentSession> {
   const session = await requireSchoolSession();
   if (!session.permissions.has(code)) {
     throw new Error(`Forbidden: missing permission "${code}"`);
+  }
+  return session;
+}
+
+export async function requireAnyPermission(codes: string[]): Promise<CurrentSession> {
+  const session = await requireSchoolSession();
+  if (!codes.some((code) => session.permissions.has(code))) {
+    throw new Error(`Forbidden: missing one of the required permissions (${codes.join(', ')})`);
   }
   return session;
 }

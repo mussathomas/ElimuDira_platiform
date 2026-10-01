@@ -1,5 +1,5 @@
 {
-  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/icon.svg/route": "app/icon.svg/route.js",
-  "/dashboard/exams/class-results/page": "app/dashboard/exams/class-results/page.js"
+  "/dashboard/finance/page": "app/dashboard/finance/page.js",
+  "/dashboard/finance/charges/page": "app/dashboard/finance/charges/page.js"
 }

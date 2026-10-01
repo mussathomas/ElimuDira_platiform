@@ -39,8 +39,7 @@ export default async function RolesPage() {
       <div>
         <h2 className="text-xl font-semibold text-ink">Roles & permissions</h2>
         <p className="help-text">
-          Administrator always has full access. Grant or revoke individual actions for every other role — changes
-          take effect immediately.
+          Create roles for positions such as Headmaster, Academic, or Teacher, then grant each role the required module actions. Assign roles to staff when adding or editing their account; use User Access for individual exceptions.
         </p>
       </div>
 

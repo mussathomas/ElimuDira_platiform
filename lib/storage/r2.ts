@@ -1,5 +1,5 @@
 import 'server-only';
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // `import 'server-only'` makes it a build error to import this module from
@@ -75,12 +75,26 @@ export async function deleteObject(key: string) {
 }
 
 /** Time-limited signed URL — the only way objects are ever read from the browser. */
-export async function getSignedDownloadUrl(key: string, expiresInSeconds = 3600) {
+export async function getSignedDownloadUrl(key: string, expiresInSeconds = 3600, downloadName?: string) {
   if (!Number.isInteger(expiresInSeconds) || expiresInSeconds < 1 || expiresInSeconds > 604800) {
     throw new Error('R2 signed URL expiry must be between 1 second and 7 days.');
   }
 
-  return getSignedUrl(getClient(), new GetObjectCommand({ Bucket: getBucket(), Key: key }), {
+  return getSignedUrl(getClient(), new GetObjectCommand({
+    Bucket: getBucket(),
+    Key: key,
+    ...(downloadName ? { ResponseContentDisposition: `attachment; filename="${downloadName.replace(/["\\/\r\n]/g, '_')}"` } : {}),
+  }), {
     expiresIn: expiresInSeconds,
   });
+}
+
+export async function objectExists(key: string) {
+  try {
+    await getClient().send(new HeadObjectCommand({ Bucket: getBucket(), Key: key }));
+    return true;
+  } catch (error) {
+    if (error && typeof error === 'object' && '$metadata' in error && (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404) return false;
+    throw error;
+  }
 }

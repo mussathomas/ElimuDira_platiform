@@ -33,9 +33,9 @@ interface SidebarProps {
   brand: { title: string; subtitle?: string; logoUrl?: string | null };
 }
 
-function isVisible(permission: string | undefined, permissions: Set<string>, isSuperAdmin: boolean) {
-  if (!permission) return true;
-  return isSuperAdmin || permissions.has(permission);
+function isVisible(permission: string | undefined, permissions: Set<string>, isSuperAdmin: boolean, anyPermissions?: string[]) {
+  if (!permission && !anyPermissions?.length) return true;
+  return isSuperAdmin || Boolean(permission && permissions.has(permission)) || Boolean(anyPermissions?.some((code) => permissions.has(code)));
 }
 
 const icons = {
@@ -106,10 +106,10 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
       <div className="flex items-center gap-2 border-b border-border px-5 py-4">
-        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-brand text-white">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-brand text-white">
           {brand.logoUrl ? (
             // Signed R2 URLs are request-scoped and are safe to pass to this client component.
-            <img src={brand.logoUrl} alt="" className="h-full w-full object-cover" />
+            <img src={brand.logoUrl} alt="" className="h-full w-full object-contain" />
           ) : (
             <LayoutDashboard size={16} />
           )}
@@ -131,7 +131,7 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
       <div className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-1">
           {sections.map((section) => {
-            if (!isVisible(section.permission, permissions, isSuperAdmin)) return null;
+            if (!isVisible(section.permission, permissions, isSuperAdmin, section.anyPermissions)) return null;
 
             // Leaf-level section (e.g. Dashboard) — no children, just a link.
             if (!section.children) {
@@ -154,7 +154,7 @@ export function Sidebar({ sections, permissions, isSuperAdmin, brand }: SidebarP
             }
 
             const visibleChildren = section.children.filter((c) =>
-              isVisible(c.permission, permissions, isSuperAdmin)
+              isVisible(c.permission, permissions, isSuperAdmin, c.anyPermissions)
             );
             if (visibleChildren.length === 0) return null;
 

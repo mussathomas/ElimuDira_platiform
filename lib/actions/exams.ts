@@ -10,6 +10,7 @@ import { sendGuardianMessage } from '@/lib/communication';
 
 const examSchema = z.object({ name: z.string().trim().min(2).max(100), term: z.string().trim().min(1).max(30), examination_type_id: z.string().uuid().optional().or(z.literal('')), starts_on: z.string().optional().or(z.literal('')), ends_on: z.string().optional().or(z.literal('')) });
 const markSchema = z.object({ examination_id: z.string().uuid(), student_id: z.string().uuid(), subject_id: z.string().uuid(), score: z.coerce.number().finite().min(0).max(1000), comment: z.string().trim().max(300).optional().or(z.literal('')) });
+const bulkMarksSchema = z.object({ examination_id: z.string().uuid(), class_id: z.string().uuid(), subject_id: z.string().uuid(), stream_id: z.string().uuid().optional().or(z.literal('')), marks: z.array(z.object({ student_id: z.string().uuid(), value: z.string() })).min(1) });
 type GradeBand = { min_score: number; max_score: number; grade_name: string; points: number | null; remark: string | null; passed: boolean };
 type DivisionBand = { min_points: number; max_points: number | null; division_name: string; description: string | null; passed: boolean };
 type Snapshot = { scale: { id: string; name: string; coverage_required: boolean; max_mark: number; minimum_pass_mark: number; bands: GradeBand[] }; division: { id: string; subjects_counted: number; use_best_subjects: boolean; minimum_subjects_required: number; maximum_subjects_allowed: number; selection_method: SelectionMethod; include_compulsory: boolean; auto_select_optional: boolean; include_subsidiary_subjects: boolean; allow_failed_subjects: boolean; compulsory_must_pass: boolean; failed_compulsory_fails_overall: boolean; division_zero_on_failure: boolean; minimum_passed_subjects: number; maximum_failed_subjects: number; ranking_method?: 'aggregate' | 'total_marks' | 'average_mark'; compulsory: string[]; excluded: string[]; bands: DivisionBand[] } | null };
@@ -77,7 +78,7 @@ export async function saveMark(formData: FormData): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient();
   const { data: student } = await supabase.from('students').select('id, class_id').eq('id', parsed.data.student_id).eq('school_id', session.school!.id).maybeSingle();
   if (!student) return { ok: false, error: 'That student is not in this school.' };
-  if (session.roleName?.toLowerCase() === 'teacher') { const { data: assignment } = await supabase.from('teacher_assignments').select('id').eq('school_id', session.school!.id).eq('profile_id', session.userId).eq('class_id', student.class_id ?? '').eq('subject_id', parsed.data.subject_id).maybeSingle(); if (!assignment) return { ok: false, error: 'You are not assigned to this class and subject.' }; }
+  if (!session.roleIsSystem) { const { data: assignment } = await supabase.from('teacher_assignments').select('id').eq('school_id', session.school!.id).eq('profile_id', session.userId).eq('class_id', student.class_id ?? '').eq('subject_id', parsed.data.subject_id).maybeSingle(); if (!assignment) return { ok: false, error: 'You are not assigned to this class and subject.' }; }
   const { data: exam } = await supabase.from('examinations').select('id, examination_type_id, status').eq('id', parsed.data.examination_id).eq('school_id', session.school!.id).maybeSingle();
   const { data: subject } = await supabase.from('subjects').select('id').eq('id', parsed.data.subject_id).eq('school_id', session.school!.id).maybeSingle();
   if (!exam || !subject) return { ok: false, error: 'The selected exam or subject is not in this school.' };
@@ -93,6 +94,47 @@ export async function saveMark(formData: FormData): Promise<ActionResult> {
   const { error } = await supabase.from('exam_marks').upsert({ school_id: session.school!.id, examination_id: parsed.data.examination_id, student_id: parsed.data.student_id, subject_id: parsed.data.subject_id, score: parsed.data.score, grade: calculatedSubject.grade, points: calculatedSubject.point, remark: calculatedSubject.remark, passed: calculatedSubject.passed, included_in_division: true, configuration_version_id: resolved.id, comment: parsed.data.comment || null, entered_by: session.userId }, { onConflict: 'examination_id,student_id,subject_id' });
   if (error) { console.error('saveMark', error); return { ok: false, error: 'Unable to save this mark.' }; }
   revalidatePath('/dashboard/exams/marks'); revalidatePath('/dashboard/exams/results'); revalidatePath('/dashboard/exams/class-results'); revalidatePath('/dashboard/exams/reports'); return { ok: true };
+}
+
+export type BulkMarksResult = ActionResult & { savedCount?: number; updatedCount?: number };
+
+export async function saveMarksBulk(formData: FormData): Promise<BulkMarksResult> {
+  const session = await requirePermission('enter_marks');
+  let rawMarks: unknown;
+  try { rawMarks = JSON.parse(String(formData.get('marks') ?? '[]')); } catch { return { ok: false, error: 'The mark sheet could not be read. Please reload the roster.' }; }
+  const parsed = bulkMarksSchema.safeParse({ examination_id: String(formData.get('examination_id') ?? ''), class_id: String(formData.get('class_id') ?? ''), subject_id: String(formData.get('subject_id') ?? ''), stream_id: String(formData.get('stream_id') ?? ''), marks: rawMarks });
+  if (!parsed.success) return { ok: false, error: 'Choose an examination, class, subject, and valid mark sheet.' };
+  const supabase = await createServerSupabaseClient(); const schoolId = session.school!.id;
+  const [{ data: exam }, { data: subject }, { data: schoolClass }] = await Promise.all([
+    supabase.from('examinations').select('id, examination_type_id, status').eq('id', parsed.data.examination_id).eq('school_id', schoolId).maybeSingle(),
+    supabase.from('subjects').select('id').eq('id', parsed.data.subject_id).eq('school_id', schoolId).maybeSingle(),
+    supabase.from('classes').select('id').eq('id', parsed.data.class_id).eq('school_id', schoolId).maybeSingle(),
+  ]);
+  if (!exam || !subject || !schoolClass) return { ok: false, error: 'The selected examination, class, or subject is not available.' };
+  if (exam.status === 'published') return { ok: false, error: 'Published examinations are locked.' };
+  if (!session.roleIsSystem) {
+    const { data: assignment } = await supabase.from('teacher_assignments').select('id').eq('school_id', schoolId).eq('profile_id', session.userId).eq('class_id', parsed.data.class_id).eq('subject_id', parsed.data.subject_id).maybeSingle();
+    if (!assignment) return { ok: false, error: 'You are not assigned to this class and subject.' };
+  }
+  const uniqueStudentIds = [...new Set(parsed.data.marks.map((mark) => mark.student_id))];
+  const { data: students } = await supabase.from('students').select('id, class_id, stream_id').eq('school_id', schoolId).eq('class_id', parsed.data.class_id).eq('status', 'active').in('id', uniqueStudentIds);
+  const studentsById = new Map((students ?? []).map((student) => [student.id, student]));
+  if (studentsById.size !== uniqueStudentIds.length || (parsed.data.stream_id && (students ?? []).some((student) => student.stream_id !== parsed.data.stream_id))) return { ok: false, error: 'One or more students are outside the selected class or stream.' };
+  if (!students?.length) return { ok: false, error: 'Enter at least one mark before saving.' };
+  const resolved = await createConfigurationSnapshot(schoolId, exam.id, students[0]!.id, exam.examination_type_id);
+  if (!resolved) return { ok: false, error: 'No grading scale is configured for this school or academic level.' };
+  const maximumMark = Number(resolved.snapshot.scale.max_mark); const errors: string[] = [];
+  const entered = parsed.data.marks.flatMap((mark) => { const value = mark.value.trim(); if (!value) return []; const score = Number(value); if (!Number.isFinite(score)) { errors.push(`Student ${mark.student_id} has an invalid mark.`); return []; } if (score < 0 || score > maximumMark) { errors.push(`Student ${mark.student_id} must have a mark from 0 to ${maximumMark}.`); return []; } return [{ student_id: mark.student_id, score }]; });
+  if (errors.length) return { ok: false, error: errors.slice(0, 3).join(' ') + (errors.length > 3 ? ` ${errors.length - 3} more errors.` : '') };
+  if (!entered.length) return { ok: false, error: 'Enter at least one mark before saving.' };
+  const { data: existing } = await supabase.from('exam_marks').select('student_id, score').eq('school_id', schoolId).eq('examination_id', exam.id).eq('subject_id', subject.id).in('student_id', entered.map((mark) => mark.student_id));
+  const existingByStudent = new Map((existing ?? []).map((mark) => [mark.student_id, Number(mark.score)])); const division = divisionConfig(resolved.snapshot);
+  const rows = entered.map((mark) => { const calculated = calculateResult(gradingConfig(resolved.snapshot), { ...division, subjectsUsed: 1, minimumSubjectsRequired: 1, maximumSubjectsAllowed: 1, selectionMethod: 'all_subjects', compulsorySubjectIds: [], excludedSubjectIds: [], ranges: division.ranges.length ? division.ranges : [{ division: 'Unclassified', minAggregate: 0, maxAggregate: null, passed: true, remark: '', order: 0 }] }, [{ subjectId: subject.id, mark: mark.score }]); const calculatedSubject = calculated.subjects[0]; return { school_id: schoolId, examination_id: exam.id, student_id: mark.student_id, subject_id: subject.id, score: mark.score, grade: calculatedSubject?.grade ?? null, points: calculatedSubject?.point ?? null, remark: calculatedSubject?.remark ?? null, passed: calculatedSubject?.passed ?? null, included_in_division: true, configuration_version_id: resolved.id, entered_by: session.userId }; });
+  if (rows.some((row) => !row.grade)) return { ok: false, error: 'One or more marks are outside the configured grading ranges.' };
+  const { error } = await supabase.from('exam_marks').upsert(rows, { onConflict: 'examination_id,student_id,subject_id' });
+  if (error) { console.error('saveMarksBulk', error); return { ok: false, error: 'Unable to save the mark sheet.' }; }
+  const updatedCount = entered.filter((mark) => existingByStudent.has(mark.student_id) && existingByStudent.get(mark.student_id) !== mark.score).length; const savedCount = entered.filter((mark) => !existingByStudent.has(mark.student_id)).length;
+  revalidatePath('/dashboard/exams/marks'); revalidatePath('/dashboard/exams/results'); revalidatePath('/dashboard/exams/class-results'); revalidatePath('/dashboard/exams/reports'); return { ok: true, savedCount, updatedCount };
 }
 
 export async function processExamination(formData: FormData): Promise<ActionResult> {

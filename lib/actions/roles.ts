@@ -102,3 +102,50 @@ export async function setRolePermission(
   revalidatePath('/dashboard/staff/roles');
   return { ok: true };
 }
+
+export async function setUserPermissionOverrides(
+  profileId: string,
+  permissionIds: string[],
+  granted: boolean
+): Promise<ActionResult> {
+  const session = await requirePermission('manage_users');
+  const parsed = z.object({
+    profileId: z.string().uuid(),
+    permissionIds: z.array(z.string().uuid()).min(1).max(100),
+    granted: z.boolean(),
+  }).safeParse({ profileId, permissionIds: [...new Set(permissionIds)], granted });
+  if (!parsed.success) return { ok: false, error: 'Choose a valid staff member and permission.' };
+  if (parsed.data.profileId === session.userId) return { ok: false, error: 'You cannot change your own individual access.' };
+
+  const supabase = await createServerSupabaseClient();
+  const [{ data: profile }, { data: permissions }] = await Promise.all([
+    supabase.from('profiles').select('id').eq('id', parsed.data.profileId).eq('school_id', session.school!.id).maybeSingle(),
+    supabase.from('permissions').select('id').in('id', parsed.data.permissionIds),
+  ]);
+  if (!profile || permissions?.length !== parsed.data.permissionIds.length) {
+    return { ok: false, error: 'The selected user or permissions are not available.' };
+  }
+
+  const { error } = await supabase.from('user_permission_overrides').upsert(
+    parsed.data.permissionIds.map((permissionId) => ({
+      profile_id: profile.id,
+      permission_id: permissionId,
+      granted: parsed.data.granted,
+    })),
+    { onConflict: 'profile_id,permission_id' }
+  );
+  if (error) return { ok: false, error: "Unable to update this user's access." };
+
+  await supabase.from('audit_logs').insert({
+    school_id: session.school!.id,
+    actor_id: session.userId,
+    action: parsed.data.granted ? 'user.grant_permissions' : 'user.revoke_permissions',
+    resource_type: 'profile',
+    resource_id: profile.id,
+    metadata: { permission_ids: parsed.data.permissionIds },
+  });
+
+  revalidatePath('/dashboard/staff/access');
+  revalidatePath('/dashboard');
+  return { ok: true };
+}

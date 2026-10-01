@@ -2,6 +2,7 @@ export interface NavLeaf {
   label: string;
   href: string;
   permission?: string; // omit = visible to any authenticated school user
+  anyPermissions?: string[];
 }
 
 export interface NavSection {
@@ -9,6 +10,7 @@ export interface NavSection {
   icon?: string;
   href?: string; // present when the section itself is also a page (e.g. Dashboard)
   permission?: string;
+  anyPermissions?: string[];
   children?: NavLeaf[];
 }
 
@@ -30,6 +32,7 @@ export const schoolNav: NavSection[] = [
     icon: 'ShieldCheck',
     children: [
       { label: 'Manage Staff', href: '/dashboard/staff', permission: 'view_staff' },
+      { label: 'User Access', href: '/dashboard/staff/access', permission: 'manage_users' },
       { label: 'Roles', href: '/dashboard/staff/roles', permission: 'manage_roles' },
       { label: 'Permissions', href: '/dashboard/staff/permissions', permission: 'manage_roles' },
       { label: 'Audit', href: '/dashboard/staff/audit', permission: 'view_audit' },
@@ -89,12 +92,13 @@ export const schoolNav: NavSection[] = [
   {
     label: 'Finance',
     icon: 'WalletCards',
-    permission: 'view_finance',
     children: [
-      { label: 'Finance Overview', href: '/dashboard/finance', permission: 'view_finance' },
-      { label: 'Fee Assessments', href: '/dashboard/finance?workspace=assessment', permission: 'create_payment' },
-      { label: 'Payments', href: '/dashboard/finance?workspace=payment', permission: 'create_payment' },
+      { label: 'Dashboard', href: '/dashboard/finance', permission: 'view_finance' },
+      { label: 'Fee Structures', href: '/dashboard/finance/fee-structures', anyPermissions: ['view_finance', 'manage_fee_structures'] },
+      { label: 'Student Charges', href: '/dashboard/finance/charges', anyPermissions: ['view_finance', 'create_student_charges', 'manage_finance_adjustments', 'approve_finance_corrections'] },
+      { label: 'Payments', href: '/dashboard/finance/payments', anyPermissions: ['view_finance', 'record_payments'] },
       { label: 'Outstanding Balances', href: '/dashboard/finance/outstanding', permission: 'view_finance' },
+      { label: 'Reports', href: '/dashboard/finance/reports', anyPermissions: ['view_finance', 'generate_finance_reports'] },
     ],
   },
   {

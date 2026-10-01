@@ -12,7 +12,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         sections={platformNav}
         permissions={session.permissions}
         isSuperAdmin={true}
-        brand={{ title: 'ElimuDira', subtitle: 'Platform Admin' }}
+        brand={{ title: 'ElimuDira', subtitle: 'Platform Admin', logoUrl: '/elimudira_logo.png' }}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar title="Platform administration" userName={session.fullName} roleName="Super Admin" />

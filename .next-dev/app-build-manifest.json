@@ -16,25 +16,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/loading.js"
     ],
-    "/dashboard/exams/loading": [
+    "/dashboard/finance/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/exams/loading.js"
+      "static/chunks/app/dashboard/finance/page.js"
     ],
-    "/dashboard/exams/class-results/page": [
+    "/dashboard/finance/charges/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/exams/class-results/page.js"
-    ],
-    "/favicon.ico/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/favicon.ico/route.js"
-    ],
-    "/dashboard/exams/reports/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/exams/reports/page.js"
+      "static/chunks/app/dashboard/finance/charges/page.js"
     ]
   }
 }

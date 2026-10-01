@@ -5,13 +5,70 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select } from '@/components/ui/field';
 import { FinanceEntryForms } from '@/components/finance/finance-entry-forms';
+import { getFinanceYearSummary } from '@/lib/finance/service';
 
 const currency = new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS', maximumFractionDigits: 0 });
 const money = (value: number) => currency.format(value);
 
 type FeeLine = { id: string; name: string; assessed: number; paid: number; balance: number; dueDate: string | null; status: 'Paid' | 'Partial' | 'Unpaid' };
 
-export default async function FinancePage({ searchParams }: { searchParams: Promise<{ workspace?: string; class_id?: string }> }) {
+type FinanceSearchParams = { academic_year_id?: string; class_id?: string };
+
+export default async function FinancePage({ searchParams }: { searchParams: Promise<FinanceSearchParams> }) {
+  const session = await requirePermission('view_finance');
+  const params = await searchParams;
+  const supabase = await createServerSupabaseClient();
+  const schoolId = session.school!.id;
+  const [{ data: years }, { data: classes }] = await Promise.all([
+    supabase.from('academic_years').select('id, name, is_current').eq('school_id', schoolId).order('start_date', { ascending: false }),
+    supabase.from('classes').select('id, name').eq('school_id', schoolId).order('order_index'),
+  ]);
+  const academicYearId = params.academic_year_id ?? years?.find((year) => year.is_current)?.id ?? years?.[0]?.id ?? '';
+  const year = (years ?? []).find((item) => item.id === academicYearId);
+  const summary = year ? await getFinanceYearSummary(year.id, params.class_id ?? null) : null;
+  let recentQuery = supabase.from('fee_payments')
+    .select('id, student_id, payment_date, amount, method, receipt_number, students!inner(admission_number, first_name, last_name), student_enrollments!inner(class_id), fee_payment_allocations(amount, fee_assessments(description))')
+    .eq('school_id', schoolId).eq('academic_year_id', academicYearId).eq('legacy_year_unassigned', false);
+  if (params.class_id) recentQuery = recentQuery.eq('student_enrollments.class_id', params.class_id);
+  const { data: recentPayments } = year ? await recentQuery.order('payment_date', { ascending: false }).limit(10) : { data: [] };
+  const selectedClass = (classes ?? []).find((item) => item.id === params.class_id);
+  const money = (value: number) => currency.format(value);
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
+        <div><p className="text-sm font-medium uppercase text-brand">School finance</p><h2 className="mt-1 text-xl font-semibold text-ink">Finance dashboard</h2><p className="help-text mt-1">{year ? `${year.name}${selectedClass ? ` · ${selectedClass.name}` : ''}` : 'Create an academic year to begin.'} · balances are kept separate by academic year.</p></div>
+        <div className="flex flex-wrap gap-2"><Link href="/dashboard/finance/fee-structures" className="rounded-md border border-border px-3 py-2 text-sm font-medium text-ink">Fee structures</Link><Link href="/dashboard/finance/payments" className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white">Payments</Link><Link href="/dashboard/finance/outstanding" className="rounded-md border border-border px-3 py-2 text-sm font-medium text-ink">Outstanding</Link><Link href="/dashboard/finance/reports" className="rounded-md border border-border px-3 py-2 text-sm font-medium text-ink">Reports</Link></div>
+      </header>
+
+      <Card>
+        <form method="get" className="grid gap-3 sm:grid-cols-3">
+          <div><label className="label-text" htmlFor="academic_year_id">Academic year</label><Select id="academic_year_id" name="academic_year_id" defaultValue={academicYearId}><option value="">Choose year</option>{(years ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}{item.is_current ? ' (current)' : ''}</option>)}</Select></div>
+          <div><label className="label-text" htmlFor="class_id">Class</label><Select id="class_id" name="class_id" defaultValue={params.class_id ?? ''}><option value="">All classes</option>{(classes ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
+          <div className="flex items-end"><button type="submit" className="h-10 w-full rounded-md bg-brand px-4 text-sm font-medium text-white">Apply filters</button></div>
+        </form>
+      </Card>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Card><p className="help-text">Expected fees</p><p className="mt-2 text-xl font-semibold text-ink">{money((summary?.totalCharges ?? 0) + (summary?.totalAdjustments ?? 0))}</p></Card>
+        <Card><p className="help-text">Collected and allocated</p><p className="mt-2 text-xl font-semibold text-brand-dark">{money(summary?.totalAllocatedPayments ?? 0)}</p></Card>
+        <Card><p className="help-text">Outstanding</p><p className="mt-2 text-xl font-semibold text-danger">{money(summary?.totalOutstanding ?? 0)}</p></Card>
+        <Card><p className="help-text">Students with a balance</p><p className="mt-2 text-xl font-semibold text-ink">{summary?.studentsWithBalance ?? 0}</p></Card>
+        <Card><p className="help-text">Collected today</p><p className="mt-2 text-xl font-semibold text-ink">{money(summary?.paymentsToday ?? 0)}</p></Card>
+      </section>
+
+      <Card>
+        <CardHeader><CardTitle>Recent payments</CardTitle></CardHeader>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-muted"><th className="px-3 py-2">Receipt</th><th className="px-3 py-2">Date</th><th className="px-3 py-2">Student</th><th className="px-3 py-2">Allocation</th><th className="px-3 py-2">Method</th><th className="px-3 py-2">Amount</th></tr></thead><tbody>
+          {(recentPayments ?? []).map((payment: any) => { const student = Array.isArray(payment.students) ? payment.students[0] : payment.students; const allocations = (payment.fee_payment_allocations ?? []).map((item: any) => { const charge = Array.isArray(item.fee_assessments) ? item.fee_assessments[0] : item.fee_assessments; return charge?.description; }).filter(Boolean).join(', '); return <tr key={payment.id} className="border-b border-line"><td className="px-3 py-3 font-mono text-xs">{payment.receipt_number}</td><td className="px-3 py-3">{payment.payment_date}</td><td className="px-3 py-3">{student?.admission_number} · {student?.first_name} {student?.last_name}</td><td className="px-3 py-3">{allocations || '—'}</td><td className="px-3 py-3 capitalize">{String(payment.method).replaceAll('_', ' ')}</td><td className="px-3 py-3 font-semibold">{money(Number(payment.amount))}</td></tr>; })}
+        </tbody></table></div>
+        {!recentPayments?.length && <p className="help-text p-4">No payments for this year yet.</p>}
+      </Card>
+    </div>
+  );
+}
+
+async function FinanceLegacyPage({ searchParams }: { searchParams: Promise<{ workspace?: string; class_id?: string }> }) {
   const session = await requirePermission('view_finance');
   const params = await searchParams;
   const supabase = await createServerSupabaseClient();
