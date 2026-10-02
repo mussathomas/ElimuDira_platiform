@@ -1,5 +1,6 @@
 export type SelectionMethod = 'best_n' | 'all_subjects' | 'compulsory_plus_best_optional' | 'manual';
 export type OverallStatus = 'Pass' | 'Fail' | 'Incomplete' | 'Absent' | 'Not Classified';
+export const MAX_MARK_ENTRY_SCORE = 100;
 
 export interface GradeRange {
   grade: string;

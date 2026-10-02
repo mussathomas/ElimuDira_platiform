@@ -7,9 +7,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { ActionResult } from '@/lib/actions/school';
 import { calculateResult, type DivisionSchemeConfig, type GradingSchemeConfig, type SelectionMethod } from '@/lib/grading/engine';
 import { sendGuardianMessage } from '@/lib/communication';
+import { MAX_MARK_ENTRY_SCORE } from '@/lib/grading/engine';
 
 const examSchema = z.object({ name: z.string().trim().min(2).max(100), term: z.string().trim().min(1).max(30), examination_type_id: z.string().uuid().optional().or(z.literal('')), starts_on: z.string().optional().or(z.literal('')), ends_on: z.string().optional().or(z.literal('')) });
-const markSchema = z.object({ examination_id: z.string().uuid(), student_id: z.string().uuid(), subject_id: z.string().uuid(), score: z.coerce.number().finite().min(0).max(1000), comment: z.string().trim().max(300).optional().or(z.literal('')) });
+const markSchema = z.object({ examination_id: z.string().uuid(), student_id: z.string().uuid(), subject_id: z.string().uuid(), score: z.coerce.number().finite().min(0).max(MAX_MARK_ENTRY_SCORE), comment: z.string().trim().max(300).optional().or(z.literal('')) });
 const bulkMarksSchema = z.object({ examination_id: z.string().uuid(), class_id: z.string().uuid(), subject_id: z.string().uuid(), stream_id: z.string().uuid().optional().or(z.literal('')), marks: z.array(z.object({ student_id: z.string().uuid(), value: z.string() })).min(1) });
 type GradeBand = { min_score: number; max_score: number; grade_name: string; points: number | null; remark: string | null; passed: boolean };
 type DivisionBand = { min_points: number; max_points: number | null; division_name: string; description: string | null; passed: boolean };
@@ -123,7 +124,7 @@ export async function saveMarksBulk(formData: FormData): Promise<BulkMarksResult
   if (!students?.length) return { ok: false, error: 'Enter at least one mark before saving.' };
   const resolved = await createConfigurationSnapshot(schoolId, exam.id, students[0]!.id, exam.examination_type_id);
   if (!resolved) return { ok: false, error: 'No grading scale is configured for this school or academic level.' };
-  const maximumMark = Number(resolved.snapshot.scale.max_mark); const errors: string[] = [];
+  const maximumMark = Math.min(Number(resolved.snapshot.scale.max_mark), MAX_MARK_ENTRY_SCORE); const errors: string[] = [];
   const entered = parsed.data.marks.flatMap((mark) => { const value = mark.value.trim(); if (!value) return []; const score = Number(value); if (!Number.isFinite(score)) { errors.push(`Student ${mark.student_id} has an invalid mark.`); return []; } if (score < 0 || score > maximumMark) { errors.push(`Student ${mark.student_id} must have a mark from 0 to ${maximumMark}.`); return []; } return [{ student_id: mark.student_id, score }]; });
   if (errors.length) return { ok: false, error: errors.slice(0, 3).join(' ') + (errors.length > 3 ? ` ${errors.length - 3} more errors.` : '') };
   if (!entered.length) return { ok: false, error: 'Enter at least one mark before saving.' };

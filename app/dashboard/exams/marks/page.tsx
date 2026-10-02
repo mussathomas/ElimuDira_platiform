@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
 import { Label, Select } from '@/components/ui/field';
 import { MarksRoster } from '@/components/exams/marks-roster';
+import { MarksClassSelect } from '@/components/exams/marks-class-select';
+import { MAX_MARK_ENTRY_SCORE } from '@/lib/grading/engine';
 
 type Params = { academic_year_id?: string; term?: string; examination_id?: string; education_level_id?: string; class_id?: string; stream_id?: string; subject_id?: string };
 
@@ -50,12 +52,12 @@ export default async function MarksPage({ searchParams }: { searchParams: Promis
     roster = (students ?? []).filter((student) => !params.stream_id || student.stream_id === params.stream_id);
     marks = loadedMarks ?? [];
     const snapshot = exam.grading_configuration_version_id ? await supabase.from('grading_configuration_versions').select('snapshot').eq('id', exam.grading_configuration_version_id).eq('school_id', schoolId).maybeSingle() : { data: null };
-    maximumMark = Number((snapshot.data as any)?.snapshot?.scale?.max_mark ?? 0);
+    maximumMark = Math.min(Number((snapshot.data as any)?.snapshot?.scale?.max_mark ?? 0) || MAX_MARK_ENTRY_SCORE, MAX_MARK_ENTRY_SCORE);
     if (!maximumMark) {
       const { data: scales } = await supabase.from('grading_scales').select('education_level_id,academic_year_id,class_id,examination_type_id,max_mark').eq('school_id', schoolId).eq('status', 'active');
       const matchingScales = (scales ?? []).filter((scale: any) => (!scale.education_level_id || scale.education_level_id === params.education_level_id) && (!scale.academic_year_id || scale.academic_year_id === params.academic_year_id) && (!scale.class_id || scale.class_id === params.class_id) && (!scale.examination_type_id || scale.examination_type_id === exam.examination_type_id));
       const scale = matchingScales.sort((left: any, right: any) => { const specificity = (item: any) => Number(Boolean(item.education_level_id)) + Number(Boolean(item.academic_year_id)) + Number(Boolean(item.class_id)) + Number(Boolean(item.examination_type_id)); return specificity(right) - specificity(left); })[0];
-      maximumMark = Number(scale?.max_mark ?? 0);
+      maximumMark = Math.min(Number(scale?.max_mark ?? 0) || MAX_MARK_ENTRY_SCORE, MAX_MARK_ENTRY_SCORE);
     }
   }
   const markByStudent = new Map(marks.map((mark) => [mark.student_id, mark.score]));
@@ -70,7 +72,11 @@ export default async function MarksPage({ searchParams }: { searchParams: Promis
       <div><Label htmlFor="term">Term</Label><Select id="term" name="term" defaultValue={params.term ?? ''} required><option value="">Choose term</option>{[...new Set((exams ?? []).map((item) => item.term))].map((term) => <option key={term} value={term}>{term}</option>)}</Select></div>
       <div><Label htmlFor="examination_id">Examination</Label><Select id="examination_id" name="examination_id" defaultValue={params.examination_id ?? ''} required><option value="">Choose examination</option>{(exams ?? []).filter((item) => !params.academic_year_id || item.academic_year_id === params.academic_year_id).filter((item) => !params.term || item.term === params.term).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
       <div><Label htmlFor="education_level_id">Education Level</Label><Select id="education_level_id" name="education_level_id" defaultValue={params.education_level_id ?? ''} required><option value="">Choose level</option>{(levels ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
-      <div><Label htmlFor="class_id">Class</Label><Select id="class_id" name="class_id" defaultValue={params.class_id ?? ''} onChange={(event) => { if (!session.roleIsSystem) event.currentTarget.form?.submit(); }} required><option value="">Choose class</option>{availableClasses.filter((item) => !params.education_level_id || item.education_level_id === params.education_level_id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
+      <MarksClassSelect
+        classes={availableClasses.filter((item) => !params.education_level_id || item.education_level_id === params.education_level_id)}
+        defaultValue={params.class_id ?? ''}
+        autoSubmit={!session.roleIsSystem}
+      />
       <div><Label htmlFor="stream_id">Stream</Label><Select id="stream_id" name="stream_id" defaultValue={params.stream_id ?? ''}><option value="">All streams</option>{(streams ?? []).filter((item) => !params.class_id || item.class_id === params.class_id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
       <div><Label htmlFor="subject_id">Subject</Label><Select id="subject_id" name="subject_id" defaultValue={params.subject_id ?? ''} required><option value="">Choose subject</option>{availableSubjects.map((item) => <option key={item.id} value={item.id}>{item.name}{item.code ? ` (${item.code})` : ''}</option>)}</Select></div>
       <div className="flex items-end"><button type="submit" className="h-10 w-full rounded-md bg-brand px-4 text-sm font-medium text-white hover:bg-brand-dark">Load Roster</button></div>

@@ -10,14 +10,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const setupPercent = Math.round((session.school.setupStep / 8) * 100);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-dvh overflow-hidden">
       <Sidebar
         sections={schoolNav}
         permissions={session.permissions}
         isSuperAdmin={session.isSuperAdmin}
         brand={{ title: session.school.name, subtitle: 'ElimuDira', logoUrl: session.school.logoUrl }}
       />
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar title={session.school.name} userName={session.fullName} roleName={session.roleName} />
         {!session.school.setupCompleted && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-amber-light px-4 py-2.5 sm:px-6">
@@ -30,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </Link>
           </div>
         )}
-        <main className="flex-1 overflow-y-auto bg-paper p-4 sm:p-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-paper p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

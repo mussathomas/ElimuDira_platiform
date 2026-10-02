@@ -5,12 +5,13 @@ import { ActionForm } from '@/components/ui/action-form';
 import { Input } from '@/components/ui/input';
 import { Label, Select } from '@/components/ui/field';
 import { FeeStructureForm } from '@/components/finance/fee-structure-form';
-import { applyFeeStructureToClass, createFinanceCategory, setFinanceFeeStructureActive } from '@/lib/actions/finance-ledger';
+import { FeeStructureApplyForm } from '@/components/finance/fee-structure-apply-form';
+import { createFinanceCategory, setFinanceCategoryActive, setFinanceFeeStructureActive } from '@/lib/actions/finance-ledger';
 
 const money = (amount: number) => new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS', maximumFractionDigits: 2 }).format(amount);
 
 export default async function FinanceFeeStructuresPage() {
-  const session = await requireAnyPermission(['view_finance', 'manage_fee_structures']);
+  const session = await requireAnyPermission(['view_finance', 'manage_fee_structures', 'create_student_charges']);
   const supabase = await createServerSupabaseClient();
   const schoolId = session.school!.id;
   const [{ data: years }, { data: classes }, { data: levels }, { data: categories }, { data: structures }] = await Promise.all([
@@ -24,6 +25,18 @@ export default async function FinanceFeeStructuresPage() {
   const canApply = session.permissions.has('create_student_charges');
   const activeCategories = (categories ?? []).filter((category) => category.active);
   const initialYearId = (years ?? []).find((year) => year.is_current)?.id ?? years?.[0]?.id ?? '';
+  const applicableStructures = (structures ?? []).flatMap((structure) => {
+    const items = structure.fee_structure_items as unknown[] | null;
+    if (!structure.active || !items?.length) return [];
+    const year = Array.isArray(structure.academic_years) ? structure.academic_years[0] : structure.academic_years;
+    return [{
+      id: structure.id,
+      name: structure.name,
+      academicYearName: year?.name ?? 'Academic year unavailable',
+      class_id: structure.class_id,
+      education_level_id: structure.education_level_id,
+    }];
+  });
 
   return (
     <div className="space-y-6">
@@ -35,7 +48,16 @@ export default async function FinanceFeeStructuresPage() {
 
       {canManageStructures && <Card>
         <CardHeader><CardTitle>Fee categories</CardTitle></CardHeader>
-        <div className="mb-4 flex flex-wrap gap-2">{activeCategories.map((category) => <span key={category.id} className="border-r border-line pr-2 text-sm text-ink-soft last:border-0">{category.name}</span>)}{!activeCategories.length && <p className="help-text">Add the categories your school uses, such as tuition or transport.</p>}</div>
+        <div className="mb-4 divide-y divide-line border-y border-line">
+          {(categories ?? []).map((category) => <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+            <span className="text-sm text-ink">{category.name} <span className="text-muted">· {category.active ? 'Active' : 'Inactive'}</span></span>
+            <ActionForm action={setFinanceCategoryActive} submitLabel={category.active ? 'Deactivate' : 'Activate'} className="flex items-center">
+              <input type="hidden" name="category_id" value={category.id} />
+              <input type="hidden" name="active" value={category.active ? 'false' : 'true'} />
+            </ActionForm>
+          </div>)}
+          {!categories?.length && <p className="help-text py-3">Add the categories your school uses, such as tuition or transport.</p>}
+        </div>
         <ActionForm action={createFinanceCategory} submitLabel="Add category" className="flex max-w-xl items-end gap-3">
           <div className="min-w-0 flex-1"><Label htmlFor="finance_category_name">New category</Label><Input id="finance_category_name" name="name" placeholder="e.g. Tuition" maxLength={80} required /></div>
         </ActionForm>
@@ -49,10 +71,7 @@ export default async function FinanceFeeStructuresPage() {
       {canApply && <Card>
         <CardHeader><CardTitle>Apply structure to a class</CardTitle></CardHeader>
         <p className="help-text mb-4">Creates charges against existing student enrollments. Reapplying a structure does not duplicate installments.</p>
-        <ActionForm action={applyFeeStructureToClass} submitLabel="Apply to class" className="grid gap-4 sm:grid-cols-2">
-          <div><Label htmlFor="apply_structure_id">Active fee structure</Label><Select id="apply_structure_id" name="structure_id" defaultValue="" required><option value="" disabled>Choose structure</option>{(structures ?? []).filter((structure) => structure.active && (structure.fee_structure_items as unknown[] | null)?.length).map((structure) => { const year = Array.isArray(structure.academic_years) ? structure.academic_years[0] : structure.academic_years; return <option key={structure.id} value={structure.id}>{structure.name} · {year?.name}</option>; })}</Select></div>
-          <div><Label htmlFor="apply_class_id">Class</Label><Select id="apply_class_id" name="class_id" defaultValue="" required><option value="" disabled>Choose class</option>{(classes ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
-        </ActionForm>
+        <FeeStructureApplyForm classes={classes ?? []} structures={applicableStructures} />
       </Card>}
 
       <Card>

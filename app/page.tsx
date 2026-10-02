@@ -23,8 +23,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-border/80 bg-paper/85 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand font-display text-sm text-white">
-              ED
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
+              <img src="/elimudira_logo.png" alt="ElimuDira" className="h-20 w-20 max-w-none object-contain" />
             </div>
             <span className="font-display text-lg font-medium text-ink">ElimuDira</span>
           </div>

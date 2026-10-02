@@ -49,6 +49,22 @@ export async function createFinanceCategory(formData: FormData): Promise<ActionR
   return { ok: true };
 }
 
+export async function setFinanceCategoryActive(formData: FormData): Promise<ActionResult> {
+  const session = await requirePermission('manage_fee_structures');
+  const parsed = z.object({ category_id: idSchema, active: z.enum(['true', 'false']) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: 'Choose a fee category and status.' };
+  const supabase = await createServerSupabaseClient();
+  const { data: category, error } = await supabase.from('finance_fee_categories')
+    .update({ active: parsed.data.active === 'true' })
+    .eq('id', parsed.data.category_id)
+    .eq('school_id', session.school!.id)
+    .select('id')
+    .maybeSingle();
+  if (error || !category) return { ok: false, error: 'Unable to change fee category status.' };
+  revalidateFinance();
+  return { ok: true };
+}
+
 const feeItemSchema = z.object({
   category_id: idSchema,
   name: z.string().trim().min(1).max(100),

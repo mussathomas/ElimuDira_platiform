@@ -94,7 +94,7 @@ export const schoolNav: NavSection[] = [
     icon: 'WalletCards',
     children: [
       { label: 'Dashboard', href: '/dashboard/finance', permission: 'view_finance' },
-      { label: 'Fee Structures', href: '/dashboard/finance/fee-structures', anyPermissions: ['view_finance', 'manage_fee_structures'] },
+      { label: 'Fee Structures', href: '/dashboard/finance/fee-structures', anyPermissions: ['view_finance', 'manage_fee_structures', 'create_student_charges'] },
       { label: 'Student Charges', href: '/dashboard/finance/charges', anyPermissions: ['view_finance', 'create_student_charges', 'manage_finance_adjustments', 'approve_finance_corrections'] },
       { label: 'Payments', href: '/dashboard/finance/payments', anyPermissions: ['view_finance', 'record_payments'] },
       { label: 'Outstanding Balances', href: '/dashboard/finance/outstanding', permission: 'view_finance' },
