@@ -1,7 +1,1 @@
-{
-  "/icon.svg/route": "app/icon.svg/route.js",
-  "/dashboard/finance/page": "app/dashboard/finance/page.js",
-  "/dashboard/notifications/page": "app/dashboard/notifications/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
-}
+{}
