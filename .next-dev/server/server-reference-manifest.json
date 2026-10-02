@@ -1,5 +1,70 @@
 {
   "node": {
+    "407c72445640030b57558e1100c9ec3ff85fa70ea0": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%2C%5B%7B%22id%22%3A%22407c72445640030b57558e1100c9ec3ff85fa70ea0%22%2C%22exportedName%22%3A%22recordPayment%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%2C%7B%22id%22%3A%2240db9a343b4c3634314628846a4b09a07002f53769%22%2C%22exportedName%22%3A%22createFeeStructure%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%2C%7B%22id%22%3A%2240e8e68b79dcac9bc4fa76235a348930a77719247b%22%2C%22exportedName%22%3A%22createFeeAssessment%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/finance/page": "action-browser"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\finance.ts",
+      "exportedName": "recordPayment"
+    },
+    "40db9a343b4c3634314628846a4b09a07002f53769": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%2C%5B%7B%22id%22%3A%22407c72445640030b57558e1100c9ec3ff85fa70ea0%22%2C%22exportedName%22%3A%22recordPayment%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%2C%7B%22id%22%3A%2240db9a343b4c3634314628846a4b09a07002f53769%22%2C%22exportedName%22%3A%22createFeeStructure%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%2C%7B%22id%22%3A%2240e8e68b79dcac9bc4fa76235a348930a77719247b%22%2C%22exportedName%22%3A%22createFeeAssessment%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/finance/page": "action-browser"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\finance.ts",
+      "exportedName": "createFeeStructure"
+    },
+    "40e8e68b79dcac9bc4fa76235a348930a77719247b": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%2C%5B%7B%22id%22%3A%22407c72445640030b57558e1100c9ec3ff85fa70ea0%22%2C%22exportedName%22%3A%22recordPayment%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%2C%7B%22id%22%3A%2240db9a343b4c3634314628846a4b09a07002f53769%22%2C%22exportedName%22%3A%22createFeeStructure%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%2C%7B%22id%22%3A%2240e8e68b79dcac9bc4fa76235a348930a77719247b%22%2C%22exportedName%22%3A%22createFeeAssessment%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cfinance.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/finance/page": "action-browser"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\finance.ts",
+      "exportedName": "createFeeAssessment"
+    },
+    "406c4fbe214aff106f0afc199c0b49238ac6762719": {
+      "workers": {
+        "app/dashboard/notifications/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cnotifications.ts%22%2C%5B%7B%22id%22%3A%22406c4fbe214aff106f0afc199c0b49238ac6762719%22%2C%22exportedName%22%3A%22sendSchoolNotification%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cnotifications.ts%22%7D%2C%7B%22id%22%3A%22407c29d68cd35d6d18610b461adda2c621f9dbdb82%22%2C%22exportedName%22%3A%22markSchoolNotificationRead%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cnotifications.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/notifications/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\notifications.ts",
+      "exportedName": "sendSchoolNotification"
+    },
+    "407c29d68cd35d6d18610b461adda2c621f9dbdb82": {
+      "workers": {
+        "app/dashboard/notifications/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cnotifications.ts%22%2C%5B%7B%22id%22%3A%22406c4fbe214aff106f0afc199c0b49238ac6762719%22%2C%22exportedName%22%3A%22sendSchoolNotification%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cnotifications.ts%22%7D%2C%7B%22id%22%3A%22407c29d68cd35d6d18610b461adda2c621f9dbdb82%22%2C%22exportedName%22%3A%22markSchoolNotificationRead%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cnotifications.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/notifications/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\notifications.ts",
+      "exportedName": "markSchoolNotificationRead"
+    },
     "6013565d9b3216337b216948815c4c508f4e2e028c": {
       "workers": {
         "app/(auth)/login/page": {
@@ -12,84 +77,6 @@
       },
       "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\login.ts",
       "exportedName": "loginUser"
-    },
-    "400586a16f47fa5e1a7ac16a1feaf524a35833598c": {
-      "workers": {
-        "app/dashboard/exams/reports/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%2C%5B%7B%22id%22%3A%22400586a16f47fa5e1a7ac16a1feaf524a35833598c%22%2C%22exportedName%22%3A%22processExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%224025bd50874ad334ede05028f4b9a71ccae0ee3459%22%2C%22exportedName%22%3A%22createExam%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%22409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1%22%2C%22exportedName%22%3A%22recalculateExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8%22%2C%22exportedName%22%3A%22saveMark%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240bbb435e8c5a93cdf48fea867db64cde742725699%22%2C%22exportedName%22%3A%22sendClassReportsToGuardians%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240d5d0e298adb05c13c7386ba4e765b819e431b694%22%2C%22exportedName%22%3A%22saveMarksBulk%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/dashboard/exams/reports/page": "rsc"
-      },
-      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
-      "exportedName": "processExamination"
-    },
-    "4025bd50874ad334ede05028f4b9a71ccae0ee3459": {
-      "workers": {
-        "app/dashboard/exams/reports/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%2C%5B%7B%22id%22%3A%22400586a16f47fa5e1a7ac16a1feaf524a35833598c%22%2C%22exportedName%22%3A%22processExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%224025bd50874ad334ede05028f4b9a71ccae0ee3459%22%2C%22exportedName%22%3A%22createExam%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%22409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1%22%2C%22exportedName%22%3A%22recalculateExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8%22%2C%22exportedName%22%3A%22saveMark%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240bbb435e8c5a93cdf48fea867db64cde742725699%22%2C%22exportedName%22%3A%22sendClassReportsToGuardians%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240d5d0e298adb05c13c7386ba4e765b819e431b694%22%2C%22exportedName%22%3A%22saveMarksBulk%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/dashboard/exams/reports/page": "rsc"
-      },
-      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
-      "exportedName": "createExam"
-    },
-    "409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1": {
-      "workers": {
-        "app/dashboard/exams/reports/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%2C%5B%7B%22id%22%3A%22400586a16f47fa5e1a7ac16a1feaf524a35833598c%22%2C%22exportedName%22%3A%22processExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%224025bd50874ad334ede05028f4b9a71ccae0ee3459%22%2C%22exportedName%22%3A%22createExam%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%22409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1%22%2C%22exportedName%22%3A%22recalculateExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8%22%2C%22exportedName%22%3A%22saveMark%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240bbb435e8c5a93cdf48fea867db64cde742725699%22%2C%22exportedName%22%3A%22sendClassReportsToGuardians%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240d5d0e298adb05c13c7386ba4e765b819e431b694%22%2C%22exportedName%22%3A%22saveMarksBulk%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/dashboard/exams/reports/page": "rsc"
-      },
-      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
-      "exportedName": "recalculateExamination"
-    },
-    "40a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8": {
-      "workers": {
-        "app/dashboard/exams/reports/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%2C%5B%7B%22id%22%3A%22400586a16f47fa5e1a7ac16a1feaf524a35833598c%22%2C%22exportedName%22%3A%22processExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%224025bd50874ad334ede05028f4b9a71ccae0ee3459%22%2C%22exportedName%22%3A%22createExam%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%22409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1%22%2C%22exportedName%22%3A%22recalculateExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8%22%2C%22exportedName%22%3A%22saveMark%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240bbb435e8c5a93cdf48fea867db64cde742725699%22%2C%22exportedName%22%3A%22sendClassReportsToGuardians%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240d5d0e298adb05c13c7386ba4e765b819e431b694%22%2C%22exportedName%22%3A%22saveMarksBulk%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/dashboard/exams/reports/page": "rsc"
-      },
-      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
-      "exportedName": "saveMark"
-    },
-    "40bbb435e8c5a93cdf48fea867db64cde742725699": {
-      "workers": {
-        "app/dashboard/exams/reports/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%2C%5B%7B%22id%22%3A%22400586a16f47fa5e1a7ac16a1feaf524a35833598c%22%2C%22exportedName%22%3A%22processExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%224025bd50874ad334ede05028f4b9a71ccae0ee3459%22%2C%22exportedName%22%3A%22createExam%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%22409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1%22%2C%22exportedName%22%3A%22recalculateExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8%22%2C%22exportedName%22%3A%22saveMark%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240bbb435e8c5a93cdf48fea867db64cde742725699%22%2C%22exportedName%22%3A%22sendClassReportsToGuardians%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240d5d0e298adb05c13c7386ba4e765b819e431b694%22%2C%22exportedName%22%3A%22saveMarksBulk%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/dashboard/exams/reports/page": "rsc"
-      },
-      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
-      "exportedName": "sendClassReportsToGuardians"
-    },
-    "40d5d0e298adb05c13c7386ba4e765b819e431b694": {
-      "workers": {
-        "app/dashboard/exams/reports/page": {
-          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%2C%5B%7B%22id%22%3A%22400586a16f47fa5e1a7ac16a1feaf524a35833598c%22%2C%22exportedName%22%3A%22processExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%224025bd50874ad334ede05028f4b9a71ccae0ee3459%22%2C%22exportedName%22%3A%22createExam%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%22409cd5198ac68ced6d706b2a6a7d0594aa81c74bc1%22%2C%22exportedName%22%3A%22recalculateExamination%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240a367d4ac45d38fb0b68960e1b3cb4f202d97e0c8%22%2C%22exportedName%22%3A%22saveMark%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240bbb435e8c5a93cdf48fea867db64cde742725699%22%2C%22exportedName%22%3A%22sendClassReportsToGuardians%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%2C%7B%22id%22%3A%2240d5d0e298adb05c13c7386ba4e765b819e431b694%22%2C%22exportedName%22%3A%22saveMarksBulk%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cexams.ts%22%7D%5D%5D%5D&__client_imported__=!",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/dashboard/exams/reports/page": "rsc"
-      },
-      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
-      "exportedName": "saveMarksBulk"
     }
   },
   "edge": {},

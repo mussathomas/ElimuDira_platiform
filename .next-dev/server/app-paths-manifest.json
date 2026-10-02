@@ -1,9 +1,7 @@
 {
   "/icon.svg/route": "app/icon.svg/route.js",
-  "/api/exams/reports/pdf/route": "app/api/exams/reports/pdf/route.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/dashboard/finance/page": "app/dashboard/finance/page.js",
   "/dashboard/notifications/page": "app/dashboard/notifications/page.js",
-  "/dashboard/exams/class-results/page": "app/dashboard/exams/class-results/page.js",
-  "/dashboard/exams/reports/page": "app/dashboard/exams/reports/page.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
 }

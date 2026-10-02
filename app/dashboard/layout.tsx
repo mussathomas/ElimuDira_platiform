@@ -4,9 +4,12 @@ import { schoolNav } from '@/lib/permissions/nav';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { Topbar } from '@/components/sidebar/topbar';
 import { Progress } from '@/components/ui/card';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSchoolSession();
+  const supabase = await createServerSupabaseClient();
+  const { count } = await supabase.from('school_notification_recipients').select('notification_id', { count: 'exact', head: true }).eq('profile_id', session.userId).is('read_at', null);
   const setupPercent = Math.round((session.school.setupStep / 8) * 100);
 
   return (
@@ -18,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         brand={{ title: session.school.name, subtitle: 'ElimuDira', logoUrl: session.school.logoUrl }}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar title={session.school.name} userName={session.fullName} roleName={session.roleName} />
+        <Topbar title={session.school.name} userName={session.fullName} roleName={session.roleName} unreadCount={count ?? 0} />
         {!session.school.setupCompleted && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-amber-light px-4 py-2.5 sm:px-6">
             <span className="text-sm font-medium text-amber-dark">

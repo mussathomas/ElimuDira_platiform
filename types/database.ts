@@ -57,6 +57,18 @@ export interface Database {
         Update: Record<string, any> & Partial<Database['public']['Tables']['profiles']['Row']>;
         Relationships: [];
       };
+      school_notifications: {
+        Row: Record<string, any> & { id: string; school_id: string; created_by: string; kind: 'notification' | 'announcement'; title: string; body: string; created_at: string };
+        Insert: Record<string, any> & Partial<Database['public']['Tables']['school_notifications']['Row']>;
+        Update: Record<string, any> & Partial<Database['public']['Tables']['school_notifications']['Row']>;
+        Relationships: [];
+      };
+      school_notification_recipients: {
+        Row: Record<string, any> & { notification_id: string; profile_id: string; created_at: string; read_at: string | null };
+        Insert: Record<string, any> & Partial<Database['public']['Tables']['school_notification_recipients']['Row']>;
+        Update: Record<string, any> & Partial<Database['public']['Tables']['school_notification_recipients']['Row']>;
+        Relationships: [];
+      };
       permissions: {
         Row: Record<string, any> & { id: string; code: string; module: string; action: string; description: string | null };
         Insert: Record<string, any> & Partial<Database['public']['Tables']['permissions']['Row']>;

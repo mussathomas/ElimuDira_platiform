@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireAnyPermission } from '@/lib/permissions/session';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,13 +15,19 @@ export default async function FinanceFeeStructuresPage() {
   const session = await requireAnyPermission(['view_finance', 'manage_fee_structures', 'create_student_charges']);
   const supabase = await createServerSupabaseClient();
   const schoolId = session.school!.id;
-  const [{ data: years }, { data: classes }, { data: levels }, { data: categories }, { data: structures }] = await Promise.all([
+  const [yearsResult, classesResult, levelsResult, categoriesResult, structuresResult] = await Promise.all([
     supabase.from('academic_years').select('id, name, is_current').eq('school_id', schoolId).order('start_date', { ascending: false }),
-    supabase.from('classes').select('id, name').eq('school_id', schoolId).order('order_index'),
+    supabase.from('classes').select('id, name, education_level_id').eq('school_id', schoolId).order('order_index'),
     supabase.from('education_levels').select('id, name').eq('school_id', schoolId).order('order_index'),
     supabase.from('finance_fee_categories').select('id, name, active').eq('school_id', schoolId).order('name'),
     supabase.from('fee_structures').select('id, name, amount, active, academic_year_id, class_id, education_level_id, academic_years(name), classes(name), education_levels(name), fee_structure_items(id, name, amount, due_date, installment_count, finance_fee_categories(name))').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(50),
   ]);
+  const years = yearsResult.data;
+  const classes = classesResult.data;
+  const levels = levelsResult.data;
+  const categories = categoriesResult.data;
+  const structures = structuresResult.data;
+  const hasLoadError = [yearsResult, classesResult, levelsResult, categoriesResult, structuresResult].some((result) => result.error);
   const canManageStructures = session.permissions.has('manage_fee_structures');
   const canApply = session.permissions.has('create_student_charges');
   const activeCategories = (categories ?? []).filter((category) => category.active);
@@ -46,6 +53,14 @@ export default async function FinanceFeeStructuresPage() {
         <p className="help-text mt-1">Set academic-year fees by class or education level, then apply them to enrolled students.</p>
       </header>
 
+      {hasLoadError && <Card><p className="text-sm text-danger">Finance data could not be loaded. Check that the latest Supabase finance migrations are applied and your role has access.</p></Card>}
+
+      {!canManageStructures && <Card>
+        <CardHeader><CardTitle>Fee structure access</CardTitle></CardHeader>
+        <p className="help-text">Your role can view or apply fee structures, but creating and changing them requires the manage_fee_structures permission.</p>
+        {session.permissions.has('manage_roles') && <Link href="/dashboard/staff/roles" className="mt-3 inline-block text-sm font-medium text-brand hover:underline">Update role permissions</Link>}
+      </Card>}
+
       {canManageStructures && <Card>
         <CardHeader><CardTitle>Fee categories</CardTitle></CardHeader>
         <div className="mb-4 divide-y divide-line border-y border-line">
@@ -65,7 +80,7 @@ export default async function FinanceFeeStructuresPage() {
 
       {canManageStructures && <Card>
         <CardHeader><CardTitle>Create fee structure</CardTitle></CardHeader>
-        {years?.length && activeCategories.length ? <FeeStructureForm years={years} classes={classes ?? []} educationLevels={levels ?? []} categories={activeCategories} initialYearId={initialYearId} /> : <p className="help-text">Set up an academic year and at least one active fee category before creating a structure.</p>}
+        {years?.length && activeCategories.length ? <FeeStructureForm years={years} classes={classes ?? []} educationLevels={levels ?? []} categories={activeCategories} initialYearId={initialYearId} /> : <p className="help-text">Set up an academic year and at least one active fee category before creating a structure. Use the academic settings and fee categories above to complete setup.</p>}
       </Card>}
 
       {canApply && <Card>
