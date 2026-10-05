@@ -11,8 +11,6 @@ const nextConfig = {
   outputFileTracingRoot: projectRoot,
   async redirects() {
     return [
-      { source: '/dashboard/finance/fee-structures', destination: '/dashboard/finance#assessments', permanent: false },
-      { source: '/dashboard/finance/payments', destination: '/dashboard/finance#payments', permanent: false },
       { source: '/dashboard/finance/reports', destination: '/dashboard/finance', permanent: false },
     ];
   },

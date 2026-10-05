@@ -21,6 +21,23 @@ This repository currently implements **Phase 1** of the build (see "Phase status
 5. `npm run dev` → http://localhost:3000
 6. Optional: `npm run db:seed` to create "ElimuDira Demo School" with a demo user for every role (Administrator/Teacher/Accountant/Secretary), a starter academic structure, and `setup_completed = true` so you land straight on the dashboard. Credentials are printed to the console when the script finishes. Never point this at a production project.
 
+## Deploying to Vercel
+
+Import the repository with the project root as the Vercel Root Directory and keep the detected Next.js framework, install command, build command (`npm run build`), and output directory defaults. Apply the Supabase migrations before deploying.
+
+Add these environment variables in Vercel for each environment you deploy (Production and Preview):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only; never use a `NEXT_PUBLIC_` prefix)
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_R2_ACCESS_KEY_ID`
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_R2_BUCKET_NAME`
+- `NEXT_PUBLIC_R2_PUBLIC_HOSTNAME` (the bucket's `r2.dev` hostname or mapped custom domain)
+
+Redeploy after changing environment variables. `npm run build` runs the same production build Vercel uses and should pass before deployment.
+
 ## Architecture
 
 ### Multi-tenancy

@@ -5,7 +5,7 @@ type AppRoutes = "/" | "/dashboard" | "/dashboard/[...slug]" | "/dashboard/atten
 type AppRouteHandlerRoutes = "/api/exams/reports/pdf" | "/api/finance/export" | "/api/finance/receipts/[id]" | "/api/finance/statements/[id]" | "/api/timetable/export" | "/favicon.ico"
 type PageRoutes = never
 type LayoutRoutes = "/" | "/dashboard" | "/platform"
-type RedirectRoutes = "/dashboard/finance/fee-structures" | "/dashboard/finance/payments" | "/dashboard/finance/reports"
+type RedirectRoutes = "/dashboard/finance/reports"
 type RewriteRoutes = never
 type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRoutes | AppRouteHandlerRoutes
 

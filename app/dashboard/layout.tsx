@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         sections={schoolNav}
         permissions={session.permissions}
         isSuperAdmin={session.isSuperAdmin}
-        brand={{ title: session.school.name, subtitle: 'ElimuDira', logoUrl: session.school.logoUrl }}
+        brand={{ title: session.school.name, subtitle: 'ElimuDira', logoUrl: session.school.logoUrl ?? '/elimudira_logo.png' }}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar title={session.school.name} userName={session.fullName} roleName={session.roleName} unreadCount={count ?? 0} />
