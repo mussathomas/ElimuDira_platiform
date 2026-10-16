@@ -641,6 +641,45 @@
       },
       "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\transfers.ts",
       "exportedName": "cancelSchoolTransfer"
+    },
+    "404052a13d9f45ee844fe0fe8828cdfdebbefcbfe2": {
+      "workers": {
+        "app/dashboard/syllabus/topics/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%2C%5B%7B%22id%22%3A%22404052a13d9f45ee844fe0fe8828cdfdebbefcbfe2%22%2C%22exportedName%22%3A%22deleteSyllabusTopic%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%2C%7B%22id%22%3A%22409d4cb10edea27afc53518bcd6a1d0385693ed9da%22%2C%22exportedName%22%3A%22updateSyllabusProgress%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%2C%7B%22id%22%3A%2240a6182d7c11075e261ad34dcd3fd6288c729f8386%22%2C%22exportedName%22%3A%22createSyllabusTopic%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/syllabus/topics/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\syllabus.ts",
+      "exportedName": "deleteSyllabusTopic"
+    },
+    "409d4cb10edea27afc53518bcd6a1d0385693ed9da": {
+      "workers": {
+        "app/dashboard/syllabus/topics/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%2C%5B%7B%22id%22%3A%22404052a13d9f45ee844fe0fe8828cdfdebbefcbfe2%22%2C%22exportedName%22%3A%22deleteSyllabusTopic%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%2C%7B%22id%22%3A%22409d4cb10edea27afc53518bcd6a1d0385693ed9da%22%2C%22exportedName%22%3A%22updateSyllabusProgress%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%2C%7B%22id%22%3A%2240a6182d7c11075e261ad34dcd3fd6288c729f8386%22%2C%22exportedName%22%3A%22createSyllabusTopic%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/syllabus/topics/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\syllabus.ts",
+      "exportedName": "updateSyllabusProgress"
+    },
+    "40a6182d7c11075e261ad34dcd3fd6288c729f8386": {
+      "workers": {
+        "app/dashboard/syllabus/topics/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%2C%5B%7B%22id%22%3A%22404052a13d9f45ee844fe0fe8828cdfdebbefcbfe2%22%2C%22exportedName%22%3A%22deleteSyllabusTopic%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%2C%7B%22id%22%3A%22409d4cb10edea27afc53518bcd6a1d0385693ed9da%22%2C%22exportedName%22%3A%22updateSyllabusProgress%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%2C%7B%22id%22%3A%2240a6182d7c11075e261ad34dcd3fd6288c729f8386%22%2C%22exportedName%22%3A%22createSyllabusTopic%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Csyllabus.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/syllabus/topics/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\syllabus.ts",
+      "exportedName": "createSyllabusTopic"
     }
   },
   "edge": {},

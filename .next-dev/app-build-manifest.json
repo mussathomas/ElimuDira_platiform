@@ -150,6 +150,26 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/favicon.ico/route.js"
+    ],
+    "/dashboard/syllabus/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/syllabus/page.js"
+    ],
+    "/dashboard/syllabus/subject/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/syllabus/subject/page.js"
+    ],
+    "/dashboard/syllabus/class/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/syllabus/class/page.js"
+    ],
+    "/dashboard/syllabus/topics/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/syllabus/topics/page.js"
     ]
   }
 }

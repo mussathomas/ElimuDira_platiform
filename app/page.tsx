@@ -7,15 +7,15 @@ const FEATURES = [
   { title: 'Students & classes', body: 'Admissions, class assignment, transfers and full student profiles in one place.' },
   { title: 'Attendance', body: 'Mark class attendance in a few taps — teachers see only their assigned classes.' },
   { title: 'Syllabus progress', body: 'Teachers log what they\u2019ve covered; administrators see who\u2019s behind schedule.' },
-  { title: 'Exams & results', body: 'Marks entry, verification, grading and report cards — with your school\u2019s own grading scale.' },
+  { title: 'Exams & results', body: 'Marks entry, verification, grading and report cards with your school\u2019s own grading scale.' },
   { title: 'Finance', body: 'Fee structures, payments and balances tracked cleanly by academic year.' },
   { title: 'Guardian communication', body: 'Send results and reminders over WhatsApp, with SMS as a fallback.' },
 ];
 
 const BENEFITS = [
-  'Every school gets its own isolated workspace — your data is never visible to another school.',
+  'Every school gets its own isolated workspace your data is never visible to another school.',
   'Permission-based access: give each staff member exactly the modules and actions they need.',
-  'Built for non-technical staff — the common tasks take a few clicks, not five screens.',
+  'Built for non-technical staff the common tasks take a few clicks, not five screens.',
 ];
 
 export default function LandingPage() {
