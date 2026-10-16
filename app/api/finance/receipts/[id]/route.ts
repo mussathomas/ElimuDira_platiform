@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions/session';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { renderFinancePdf } from '@/lib/finance/pdf';
-import { schoolObjectKey, uploadObject, getSignedDownloadUrl, objectExists } from '@/lib/storage/r2';
+import { uploadObject, getSignedDownloadUrl, objectExists } from '@/lib/storage/r2';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await requirePermission('view_financial_statements');
@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const supabase = await createServerSupabaseClient();
     const schoolId = session.school!.id;
     const [{ data: payment }, { data: school }] = await Promise.all([
-      supabase.from('fee_payments').select('id, student_id, academic_year_id, student_enrollment_id, received_by, amount, payment_date, method, reference, receipt_number, receipt_path, students!inner(admission_number, first_name, last_name), student_enrollments!inner(classes(name), academic_years(name)), fee_payment_allocations(amount, fee_assessments(description, finance_fee_categories(name)))').eq('id', id).eq('school_id', schoolId).eq('legacy_year_unassigned', false).maybeSingle(),
+      supabase.from('fee_payments').select('id, student_id, academic_year_id, received_by, amount, payment_date, method, reference, receipt_number, receipt_path, students!inner(admission_number, first_name, last_name, classes(name)), academic_years!inner(name), fee_payment_allocations(amount, fee_assessments(description, finance_fee_categories(name)))').eq('id', id).eq('school_id', schoolId).eq('legacy_year_unassigned', false).maybeSingle(),
       supabase.from('schools').select('name, logo_path, phone, email, address').eq('id', schoolId).maybeSingle(),
     ]);
     if (!payment || !school) return NextResponse.json({ error: 'Receipt not found.' }, { status: 404 });
@@ -26,9 +26,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     if (!(await objectExists(receiptPath))) {
       const student = Array.isArray(payment.students) ? payment.students[0] : payment.students;
-      const enrollment = Array.isArray(payment.student_enrollments) ? payment.student_enrollments[0] : payment.student_enrollments;
-      const schoolClass = Array.isArray(enrollment?.classes) ? enrollment.classes[0] : enrollment?.classes;
-      const academicYear = Array.isArray(enrollment?.academic_years) ? enrollment.academic_years[0] : enrollment?.academic_years;
+      const schoolClass = Array.isArray(student?.classes) ? student.classes[0] : student?.classes;
+      const academicYear = Array.isArray(payment.academic_years) ? payment.academic_years[0] : payment.academic_years;
       const allocations = (payment.fee_payment_allocations ?? []).map((allocation: any) => {
         const charge = Array.isArray(allocation.fee_assessments) ? allocation.fee_assessments[0] : allocation.fee_assessments;
         const category = Array.isArray(charge?.finance_fee_categories) ? charge.finance_fee_categories[0] : charge?.finance_fee_categories;

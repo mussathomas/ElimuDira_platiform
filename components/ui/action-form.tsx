@@ -14,12 +14,14 @@ export function ActionForm({
   submitLabel = 'Save',
   className,
   resetOnSuccess = true,
+  onSuccess,
 }: {
   action: ActionFn;
   children: React.ReactNode;
   submitLabel?: string;
   className?: string;
   resetOnSuccess?: boolean;
+  onSuccess?: () => void;
 }) {
   const router = useRouter();
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -35,6 +37,7 @@ export function ActionForm({
         result = { ok: false, error: error instanceof Error ? error.message : 'Operation failed. Please try again.' };
       }
       if (result.ok) {
+        onSuccess?.();
         if (resetOnSuccess) {
           formRef.current?.reset();
           setResetKey((value) => value + 1);

@@ -15,14 +15,14 @@ export default async function StudentFinancePage({ params, searchParams }: {
   const session = await requirePermission('view_financial_statements');
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const supabase = await createServerSupabaseClient();
-  const [{ data: student }, { data: enrollments }, { data: school }] = await Promise.all([
+  const [{ data: student }, { data: academicYears }, { data: school }] = await Promise.all([
     supabase.from('students').select('id, admission_number, first_name, last_name').eq('id', id).eq('school_id', session.school!.id).maybeSingle(),
-    supabase.from('student_enrollments').select('id, academic_year_id, academic_years(id, name, is_current)').eq('student_id', id).eq('school_id', session.school!.id).order('placed_at', { ascending: false }),
+    supabase.from('academic_years').select('id, name, is_current').eq('school_id', session.school!.id).order('start_date', { ascending: false }),
     supabase.from('schools').select('name, logo_path, phone, email, address').eq('id', session.school!.id).maybeSingle(),
   ]);
   if (!student) notFound();
-  const enrollmentYears = (enrollments ?? []).map((enrollment) => Array.isArray(enrollment.academic_years) ? enrollment.academic_years[0] : enrollment.academic_years).filter(Boolean);
-  const selectedYearId = query.academic_year_id ?? enrollmentYears.find((year: any) => year.is_current)?.id ?? enrollmentYears[0]?.id ?? '';
+  const enrollmentYears = academicYears ?? [];
+  const selectedYearId = query.academic_year_id ?? enrollmentYears.find((year) => year.is_current)?.id ?? enrollmentYears[0]?.id ?? '';
   const statement = selectedYearId ? await getStudentFinancialStatement(id, selectedYearId) : null;
   const previousStatements = await Promise.all(enrollmentYears.filter((year: any) => year.id !== selectedYearId).slice(0, 10).map((year: any) => getStudentFinancialStatement(id, year.id)));
   if (selectedYearId && !statement) notFound();
@@ -44,11 +44,11 @@ export default async function StudentFinancePage({ params, searchParams }: {
           <div><label className="label-text" htmlFor="academic_year_id">Academic year</label><select id="academic_year_id" name="academic_year_id" defaultValue={selectedYearId} className="h-10 rounded-md border border-border bg-white px-3 text-sm"><option value="">Choose year</option>{enrollmentYears.map((year: any) => <option key={year.id} value={year.id}>{year.name}</option>)}</select></div>
           <button type="submit" className="h-10 rounded-md border border-border px-4 text-sm font-medium">View year</button>
         </form>
-        {!enrollmentYears.length && <p className="help-text py-3">This student has no academic-year enrollments.</p>}
+        {!enrollmentYears.length && <p className="help-text py-3">No academic years are configured for this school.</p>}
         {statement && <>
           <div className="grid gap-4 border-b border-line py-4 sm:grid-cols-4">
             <div><p className="help-text">Academic year</p><p className="mt-1 font-semibold text-ink">{statement.academicYear.name}</p></div>
-            <div><p className="help-text">Enrollment</p><p className="mt-1 font-semibold text-ink">{statement.enrollment.className ?? 'No class'}{statement.enrollment.streamName ? ` · ${statement.enrollment.streamName}` : ''}</p></div>
+            <div><p className="help-text">Student details</p><p className="mt-1 font-semibold text-ink">{statement.enrollment.className ?? 'No class'}{statement.enrollment.streamName ? ` · ${statement.enrollment.streamName}` : ''}</p></div>
             <div><p className="help-text">Charges</p><p className="mt-1 font-semibold text-ink">{money(statement.totalCharges + Math.max(0, statement.totalAdjustments))}</p></div>
             <div><p className="help-text">Payments allocated</p><p className="mt-1 font-semibold text-brand-dark">{money(statement.totalPaid)}</p></div>
           </div>

@@ -4,11 +4,19 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function loadStudentReports(schoolId: string, classId?: string, examinationId?: string, options?: { streamId?: string; gender?: string; educationLevelId?: string; academicYearId?: string; term?: string }) {
   const supabase = await createServerSupabaseClient();
-  const [{ data: school }, { data: classes }, { data: examinations }] = await Promise.all([
+  const [{ data: school }, { data: academicYears }, { data: classes }, { data: allExaminations }] = await Promise.all([
     supabase.from('schools').select('name, address, region, district, phone, email, motto').eq('id', schoolId).maybeSingle(),
+    supabase.from('academic_years').select('id, name').eq('school_id', schoolId).order('start_date', { ascending: false }),
     supabase.from('classes').select('id, name').eq('school_id', schoolId).order('order_index').order('name'),
-    (() => { let query = supabase.from('examinations').select('id, name, term, status, academic_year_id, academic_years(id, name)').eq('school_id', schoolId).order('created_at', { ascending: false }); if (options?.academicYearId) query = query.eq('academic_year_id', options.academicYearId); if (options?.term) query = query.eq('term', options.term); if (examinationId) query = query.eq('id', examinationId); return query; })(),
+    supabase.from('examinations').select('id, name, term, status, academic_year_id, academic_years(id, name)').eq('school_id', schoolId).order('created_at', { ascending: false }),
   ]);
+  const yearExists = academicYears?.some((year) => year.id === options?.academicYearId);
+  const selectedYearId = yearExists ? options?.academicYearId : undefined;
+  const yearExaminations = (allExaminations ?? []).filter((exam: any) => !selectedYearId || exam.academic_year_id === selectedYearId);
+  const termOptions = [...new Set(yearExaminations.map((exam: any) => exam.term))].sort((left, right) => left.localeCompare(right));
+  const selectedTerm = termOptions.includes(options?.term ?? '') ? options?.term : undefined;
+  const examinationOptions = yearExaminations.filter((exam: any) => !selectedTerm || exam.term === selectedTerm);
+  const examinations = examinationOptions.filter((exam: any) => !examinationId || exam.id === examinationId);
 
   let studentsQuery = supabase
     .from('students')
@@ -27,14 +35,15 @@ export async function loadStudentReports(schoolId: string, classId?: string, exa
   }));
   const studentIds = normalizedStudents.map((student: any) => student.id);
 
-  if (!studentIds.length) return { school, classes: classes ?? [], examinations: examinations ?? [], selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: [], marks: [], results: [], streams: [] };
+  if (!studentIds.length || !examinations.length) return { school, academicYears: academicYears ?? [], classes: classes ?? [], examinations, examinationOptions, termOptions, selectedYearId, selectedTerm, selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: [], marks: [], results: [], streams: [] };
+  const examinationIds = examinations.map((exam: any) => exam.id);
 
   const [{ data: marks }, { data: results }] = await Promise.all([
-    (() => { let query = supabase.from('exam_marks').select('student_id, examination_id, subject_id, score, grade, points, remark, passed, included_in_division, subjects(id, name), examinations(name, term, academic_year_id)').eq('school_id', schoolId).in('student_id', studentIds); if (examinationId) query = query.eq('examination_id', examinationId); return query; })(),
+    supabase.from('exam_marks').select('student_id, examination_id, subject_id, score, grade, points, remark, passed, included_in_division, subjects(id, name), examinations(name, term, academic_year_id, academic_years(id, name))').eq('school_id', schoolId).in('student_id', studentIds).in('examination_id', examinationIds),
     // Existing installations may contain CALCULATED or legacy rows from before
     // result publication statuses were introduced. Raw marks without a result
     // row are still excluded because this query only reads result rows.
-    (() => { let query = supabase.from('student_exam_results').select('student_id, examination_id, subject_count, pass_count, fail_count, aggregate, division, overall_remark, included_subject_ids, total_marks, average_mark, overall_status, position, status, examinations(name, term, academic_year_id)').eq('school_id', schoolId).in('student_id', studentIds); if (examinationId) query = query.eq('examination_id', examinationId); return query; })(),
+    supabase.from('student_exam_results').select('student_id, examination_id, subject_count, pass_count, fail_count, aggregate, division, overall_remark, included_subject_ids, total_marks, average_mark, overall_status, position, status, examinations(name, term, academic_year_id, academic_years(id, name))').eq('school_id', schoolId).in('student_id', studentIds).in('examination_id', examinationIds),
   ]);
 
   const processedKeys = new Set((results ?? []).map((result: any) => `${result.student_id}:${result.examination_id}`));
@@ -66,5 +75,5 @@ export async function loadStudentReports(schoolId: string, classId?: string, exa
     incompleteResults.set(key, current);
   }
   const allResults = [...(results ?? []), ...incompleteResults.values()];
-  return { school, classes: classes ?? [], examinations: examinations ?? [], selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: normalizedStudents, marks: marks ?? [], results: allResults, streams: [] };
+  return { school, academicYears: academicYears ?? [], classes: classes ?? [], examinations, examinationOptions, termOptions, selectedYearId, selectedTerm, selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: normalizedStudents, marks: marks ?? [], results: allResults, streams: [] };
 }

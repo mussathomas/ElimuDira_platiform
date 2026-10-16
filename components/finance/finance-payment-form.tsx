@@ -19,14 +19,16 @@ export function FinancePaymentForm({
   charges: ChargeOption[];
 }) {
   const [allocationValues, setAllocationValues] = React.useState<Record<string, string>>({});
-  const allocatedTotal = Object.values(allocationValues).reduce((total, value) => total + (Number(value) || 0), 0);
+  const allocatedCents = charges.reduce((total, charge) => total + Math.round((Number(allocationValues[charge.id]) || 0) * 100), 0);
+  const allocatedTotal = allocatedCents / 100;
+  const setAllBalances = () => setAllocationValues(Object.fromEntries(charges.map((charge) => [charge.id, charge.balance.toFixed(2)])));
 
   return (
-    <ActionForm action={recordFinancePayment} submitLabel="Record payment and issue receipt" className="space-y-5">
+    <ActionForm action={recordFinancePayment} submitLabel="Record payment and issue receipt" className="space-y-5" onSuccess={() => setAllocationValues({})}>
       <input type="hidden" name="student_id" value={studentId} />
       <input type="hidden" name="academic_year_id" value={academicYearId} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div><Label htmlFor="payment_amount">Payment amount (TZS)</Label><Input id="payment_amount" name="amount" type="number" min="0.01" step="0.01" required /></div>
+        <div><Label htmlFor="payment_amount">Payment amount (TZS)</Label><Input id="payment_amount" name="amount" type="number" min="0.01" step="0.01" value={allocatedTotal ? allocatedTotal.toFixed(2) : ''} readOnly required /><p className="help-text mt-1">Calculated from fee allocations.</p></div>
         <div><Label htmlFor="payment_date">Payment date</Label><Input id="payment_date" name="payment_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></div>
         <div><Label htmlFor="payment_method">Method</Label><Select id="payment_method" name="method" defaultValue="cash"><option value="cash">Cash</option><option value="bank">Bank</option><option value="mobile_money">Mobile money</option><option value="other">Other</option></Select></div>
         <div><Label htmlFor="payment_reference">Reference number</Label><Input id="payment_reference" name="reference" maxLength={80} /></div>
@@ -36,7 +38,10 @@ export function FinancePaymentForm({
         <Textarea id="payment_notes" name="notes" maxLength={240} />
       </div>
       <div>
-        <div className="mb-2 flex items-center justify-between gap-4"><h3 className="text-sm font-semibold text-ink">Allocate to outstanding charges</h3><p className="text-sm font-medium text-ink">Allocated: {money(allocatedTotal)}</p></div>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <div><h3 className="text-sm font-semibold text-ink">Allocate across outstanding fees</h3><p className="help-text">Enter an amount beside each fee item included in this receipt.</p></div>
+          {charges.length > 0 && <button type="button" onClick={setAllBalances} className="rounded-md border border-border bg-white px-3 py-2 text-sm font-medium text-ink hover:bg-paper">Fill all outstanding balances</button>}
+        </div>
         <div className="divide-y divide-line border-y border-line">
           {charges.map((charge) => (
             <div key={charge.id} className="grid items-center gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_180px]">
@@ -46,7 +51,8 @@ export function FinancePaymentForm({
           ))}
           {!charges.length && <p className="help-text py-4">This student has no outstanding charges for the selected academic year.</p>}
         </div>
-        <p className="help-text mt-2">The allocated total must equal the payment amount. A receipt number is issued once saved.</p>
+        <p className="mt-2 text-sm font-medium text-ink">Receipt total: {money(allocatedTotal)}</p>
+        <p className="help-text mt-1">The receipt amount is calculated from the allocations above. A receipt number is issued once saved.</p>
       </div>
     </ActionForm>
   );

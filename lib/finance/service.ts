@@ -123,18 +123,24 @@ export async function getOutstandingFinanceRows({
 export async function getStudentOpenChargeBalances(studentId: string, academicYearId: string) {
   const session = await requireAnyPermission(['view_finance', 'record_payments']);
   const supabase = await createServerSupabaseClient();
-  const { data: enrollment } = await supabase.from('student_enrollments').select('id')
-    .eq('school_id', session.school!.id).eq('student_id', studentId).eq('academic_year_id', academicYearId).maybeSingle();
-  if (!enrollment) return [];
-  const { data: charges, error } = await supabase.from('fee_assessments').select('id, description, amount, due_date')
-    .eq('school_id', session.school!.id).eq('student_id', studentId).eq('student_enrollment_id', enrollment.id)
-    .eq('academic_year_id', academicYearId).eq('legacy_year_unassigned', false);
-  if (error || !charges?.length) return [];
+  const [{ data: student, error: studentError }, { data: year, error: yearError }] = await Promise.all([
+    supabase.from('students').select('id').eq('school_id', session.school!.id).eq('id', studentId).maybeSingle(),
+    supabase.from('academic_years').select('id').eq('school_id', session.school!.id).eq('id', academicYearId).maybeSingle(),
+  ]);
+  if (studentError || yearError) throw new Error('Unable to verify the student and academic year for this payment.');
+  if (!student || !year) return [];
+  const { data: charges, error: chargesError } = await supabase.from('fee_assessments').select('id, description, amount, due_date')
+    .eq('school_id', session.school!.id).eq('student_id', studentId)
+    .eq('academic_year_id', academicYearId).eq('legacy_year_unassigned', false)
+    .order('due_date', { ascending: true, nullsFirst: false });
+  if (chargesError) throw new Error('Unable to load the student fee charges.');
+  if (!charges?.length) return [];
   const chargeIds = charges.map((charge) => charge.id);
-  const [{ data: allocations }, { data: adjustments }] = await Promise.all([
+  const [{ data: allocations, error: allocationsError }, { data: adjustments, error: adjustmentsError }] = await Promise.all([
     supabase.from('fee_payment_allocations').select('assessment_id, amount').eq('school_id', session.school!.id).in('assessment_id', chargeIds),
     supabase.from('finance_adjustments').select('assessment_id, adjustment_type, amount').eq('school_id', session.school!.id).eq('status', 'approved').in('assessment_id', chargeIds),
   ]);
+  if (allocationsError || adjustmentsError) throw new Error('Unable to calculate the student outstanding fee balances.');
   const paidByCharge = new Map<string, number>();
   for (const allocation of allocations ?? []) paidByCharge.set(allocation.assessment_id, (paidByCharge.get(allocation.assessment_id) ?? 0) + Number(allocation.amount));
   const adjustmentsByCharge = new Map<string, number>();
@@ -153,32 +159,20 @@ export async function getStudentOpenChargeBalances(studentId: string, academicYe
 export async function getStudentFinancialStatement(studentId: string, academicYearId: string): Promise<StudentFinancialStatement | null> {
   const session = await requirePermission('view_financial_statements');
   const supabase = await createServerSupabaseClient();
-  const sessionQuery = await supabase
-    .from('student_enrollments')
-    .select('id, academic_year_id, class_id, stream_id, students!inner(id, admission_number, first_name, last_name), academic_years!inner(id, name), classes(name), streams(name)')
-    .eq('student_id', studentId)
-    .eq('academic_year_id', academicYearId)
-    .eq('school_id', session.school!.id)
-    .maybeSingle();
-  if (sessionQuery.error || !sessionQuery.data) return null;
-
-  const enrollment = sessionQuery.data as any;
   const schoolId = session.school!.id;
-  const { data: charges, error: chargeError } = await supabase
-    .from('fee_assessments')
-    .select('id, description, amount, due_date, created_at')
-    .eq('school_id', schoolId)
-    .eq('student_id', studentId)
-    .eq('student_enrollment_id', enrollment.id)
-    .eq('academic_year_id', academicYearId)
-    .eq('legacy_year_unassigned', false)
-    .order('created_at');
+  const [{ data: student, error: studentError }, { data: year, error: yearError }, { data: charges, error: chargeError }] = await Promise.all([
+    supabase.from('students').select('id, admission_number, first_name, last_name, classes(name), streams(name)').eq('school_id', schoolId).eq('id', studentId).maybeSingle(),
+    supabase.from('academic_years').select('id, name').eq('school_id', schoolId).eq('id', academicYearId).maybeSingle(),
+    supabase.from('fee_assessments').select('id, description, amount, due_date, created_at').eq('school_id', schoolId).eq('student_id', studentId).eq('academic_year_id', academicYearId).eq('legacy_year_unassigned', false).order('created_at'),
+  ]);
+  if (studentError || yearError) throw new Error('Unable to load the student financial statement.');
+  if (!student || !year) return null;
   if (chargeError) throw new Error('Unable to load student charges.');
   const chargeIds = (charges ?? []).map((charge) => charge.id);
   if (!chargeIds.length) return {
-    student: { id: studentId, admissionNumber: enrollment.students.admission_number, name: `${enrollment.students.first_name} ${enrollment.students.last_name}` },
-    academicYear: { id: enrollment.academic_years.id, name: enrollment.academic_years.name },
-    enrollment: { className: enrollment.classes?.name ?? null, streamName: enrollment.streams?.name ?? null },
+    student: { id: studentId, admissionNumber: student.admission_number, name: `${student.first_name} ${student.last_name}` },
+    academicYear: { id: year.id, name: year.name },
+    enrollment: { className: (Array.isArray(student.classes) ? student.classes[0] : student.classes)?.name ?? null, streamName: (Array.isArray(student.streams) ? student.streams[0] : student.streams)?.name ?? null },
     totalCharges: 0, totalAdjustments: 0, totalPaid: 0, outstanding: 0, charges: [], transactions: [],
   };
 
@@ -241,9 +235,9 @@ export async function getStudentFinancialStatement(studentId: string, academicYe
   });
 
   return {
-    student: { id: studentId, admissionNumber: enrollment.students.admission_number, name: `${enrollment.students.first_name} ${enrollment.students.last_name}` },
-    academicYear: { id: enrollment.academic_years.id, name: enrollment.academic_years.name },
-    enrollment: { className: enrollment.classes?.name ?? null, streamName: enrollment.streams?.name ?? null },
+    student: { id: studentId, admissionNumber: student.admission_number, name: `${student.first_name} ${student.last_name}` },
+    academicYear: { id: year.id, name: year.name },
+    enrollment: { className: (Array.isArray(student.classes) ? student.classes[0] : student.classes)?.name ?? null, streamName: (Array.isArray(student.streams) ? student.streams[0] : student.streams)?.name ?? null },
     totalCharges,
     totalAdjustments,
     totalPaid,

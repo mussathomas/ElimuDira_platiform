@@ -323,7 +323,7 @@ export async function requestFinanceAdjustment(formData: FormData): Promise<Acti
   const supabase = await createServerSupabaseClient();
   const schoolId = session.school!.id;
   const { data: charge } = await supabase.from('fee_assessments').select('id, student_id, student_enrollment_id, academic_year_id, fee_category_id').eq('id', parsed.data.assessment_id).eq('school_id', schoolId).maybeSingle();
-  if (!charge || !charge.student_enrollment_id || !charge.academic_year_id) return { ok: false, error: 'Charge not found in this school or has no assigned academic year.' };
+  if (!charge || !charge.academic_year_id) return { ok: false, error: 'Charge not found in this school or has no assigned academic year.' };
   const sign = parsed.data.adjustment_type === 'discount' || parsed.data.adjustment_type === 'waiver' || (parsed.data.adjustment_type === 'correction' && parsed.data.direction === 'credit') ? -1 : 1;
   const { data: adjustment, error } = await supabase.from('finance_adjustments').insert({
     school_id: schoolId,
