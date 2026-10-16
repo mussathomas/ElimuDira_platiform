@@ -1,6 +1,7 @@
-import { PDFDocument, PDFPage, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, PDFImage, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { requirePermission } from '@/lib/permissions/session';
 import { loadStudentReports } from '@/lib/reports/student-reports';
+import { getSignedDownloadUrl } from '@/lib/storage/r2';
 
 export async function GET(request: Request) {
   const session = await requirePermission('download_reports');
@@ -23,14 +24,15 @@ export async function GET(request: Request) {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const logo = await embedSchoolLogo(pdf, data.school?.logo_path);
 
   for (const student of data.students as any[]) {
     const summaries = (data.results as any[]).filter((result) => result.student_id === student.id);
     let page = pdf.addPage([595, 842]);
-    let y = drawStudentHeader(page, student, data.school, session.school!.name, font, bold, pdf.getPageCount());
+    let y = drawStudentHeader(page, student, data.school, session.school!.name, font, bold, pdf.getPageCount(), logo);
     const startContinuation = (summary: any, includeTableHeader = true) => {
       page = pdf.addPage([595, 842]);
-      y = drawStudentHeader(page, student, data.school, session.school!.name, font, bold, pdf.getPageCount(), true);
+      y = drawStudentHeader(page, student, data.school, session.school!.name, font, bold, pdf.getPageCount(), logo, true);
       y = drawExamHeading(page, summary, y, font, bold, true);
       if (includeTableHeader) y = drawTableHeader(page, y, bold);
     };
@@ -110,11 +112,16 @@ function relation(value: any) {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
-function drawStudentHeader(page: PDFPage, student: any, school: any, fallbackSchoolName: string, font: any, bold: any, pageNumber: number, continuation = false) {
+function drawStudentHeader(page: PDFPage, student: any, school: any, fallbackSchoolName: string, font: any, bold: any, pageNumber: number, logo: PDFImage | null, continuation = false) {
   let y = 800;
+  const textX = logo ? 110 : 42;
+  if (logo) {
+    const dimensions = logo.scaleToFit(54, 54);
+    page.drawImage(logo, { x: 42, y: 775 - dimensions.height, width: dimensions.width, height: dimensions.height });
+  }
   const draw = (text: string, size: number, isBold = false) => {
-    page.drawText(fitText(text, (isBold ? bold : font), size, 511), {
-      x: 42,
+    page.drawText(fitText(text, (isBold ? bold : font), size, 553 - textX), {
+      x: textX,
       y,
       size,
       font: isBold ? bold : font,
@@ -137,6 +144,21 @@ function drawStudentHeader(page: PDFPage, student: any, school: any, fallbackSch
   page.drawLine({ start: { x: 42, y: y - 2 }, end: { x: 553, y: y - 2 }, thickness: 1, color: rgb(0.72, 0.76, 0.8) });
   page.drawText(`ElimuDira | Page ${pageNumber}`, { x: 42, y: 24, size: 7, font, color: rgb(0.4, 0.44, 0.48) });
   return y - 16;
+}
+
+async function embedSchoolLogo(document: PDFDocument, logoPath?: string | null) {
+  if (!logoPath) return null;
+  try {
+    const response = await fetch(await getSignedDownloadUrl(logoPath));
+    if (!response.ok) throw new Error(`School logo download failed with status ${response.status}.`);
+    const bytes = await response.arrayBuffer();
+    if (/\.png$/i.test(logoPath)) return await document.embedPng(bytes);
+    if (/\.jpe?g$/i.test(logoPath)) return await document.embedJpg(bytes);
+    throw new Error('School logo format is not supported in PDF documents.');
+  } catch (error) {
+    console.error('School logo could not be embedded in examination report', error);
+    return null;
+  }
 }
 
 function drawExamHeading(page: PDFPage, summary: any, y: number, font: any, bold: any, continuation = false) {
@@ -223,14 +245,20 @@ async function createClassRosterPdf(data: any, fallbackSchoolName: string, class
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const logo = await embedSchoolLogo(pdf, data.school?.logo_path);
   const page = pdf.addPage([842, 595]);
   const school = data.school;
   const draw = (text: string, x: number, y: number, size = 8, isBold = false) => page.drawText(text.slice(0, 150), { x, y, size, font: isBold ? bold : font, color: rgb(0.08, 0.12, 0.16) });
   let y = 560;
-  draw(school?.name ?? fallbackSchoolName, 28, y, 16, true); y -= 18;
-  draw([school?.address, school?.region, school?.district].filter(Boolean).join(', '), 28, y); y -= 12;
-  draw([school?.phone, school?.email].filter(Boolean).join(' · '), 28, y); y -= 12;
-  draw(school?.motto ?? '', 28, y, 8, false); y -= 22;
+  const textX = logo ? 86 : 28;
+  if (logo) {
+    const dimensions = logo.scaleToFit(46, 46);
+    page.drawImage(logo, { x: 28, y: y - dimensions.height + 8, width: dimensions.width, height: dimensions.height });
+  }
+  draw(school?.name ?? fallbackSchoolName, textX, y, 16, true); y -= 18;
+  draw([school?.address, school?.region, school?.district].filter(Boolean).join(', '), textX, y); y -= 12;
+  draw([school?.phone, school?.email].filter(Boolean).join(' · '), textX, y); y -= 12;
+  draw(school?.motto ?? '', textX, y, 8, false); y -= 22;
   const className = (data.classes as any[]).find((item) => item.id === classId)?.name ?? 'All classes';
   const examination = (data.examinations as any[]).find((item) => item.id === examinationId);
   const rosterTitle = `${className} Results${examination ? ` · ${examination.name} · ${examination.term}` : ''}`;

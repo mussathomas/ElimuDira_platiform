@@ -16,12 +16,12 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        // Cloudflare R2 public/custom domain used for logos, avatars, etc.
-        protocol: 'https',
-        hostname: process.env.NEXT_PUBLIC_R2_PUBLIC_HOSTNAME || '**.r2.dev',
-      },
-    ],
+      ...new Set([
+        process.env.NEXT_PUBLIC_R2_PUBLIC_HOSTNAME,
+        '**.r2.dev',
+        '**.r2.cloudflarestorage.com',
+      ].filter(Boolean)),
+    ].map((hostname) => ({ protocol: 'https', hostname })),
   },
   experimental: {
     useWasmBinary: true,

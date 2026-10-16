@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 
 const FEATURES = [
   { title: 'Students & classes', body: 'Admissions, class assignment, transfers and full student profiles in one place.' },
-  { title: 'Attendance', body: 'Mark class attendance in a few taps — teachers see only their assigned classes.' },
+  { title: 'Attendance', body: 'Mark class attendance in a few taps teachers see only their assigned classes.' },
   { title: 'Syllabus progress', body: 'Teachers log what they\u2019ve covered; administrators see who\u2019s behind schedule.' },
   { title: 'Exams & results', body: 'Marks entry, verification, grading and report cards with your school\u2019s own grading scale.' },
   { title: 'Finance', body: 'Fee structures, payments and balances tracked cleanly by academic year.' },
@@ -54,7 +54,7 @@ export default function LandingPage() {
           </h1>
           <p className="help-text mt-5 max-w-md text-base">
             ElimuDira gives your school its own secure workspace for students, staff, attendance, exams, finance
-            and guardian communication — set up in minutes, not months.
+            and guardian communication set up in minutes, not months.
           </p>
           <div className="mt-8 flex gap-3">
             <Link
@@ -128,7 +128,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-border px-6 py-8 text-center text-sm text-muted">
-        ElimuDira — a multi-school education management platform.
+        ElimuDira, A multi-school education management platform.
       </footer>
     </div>
   );

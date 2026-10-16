@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/field';
 import { ActionForm } from '@/components/ui/action-form';
 import { updateSchoolProfile } from '@/lib/actions/school';
+import { SchoolLogoUpload } from '@/components/settings/school-logo-upload';
 
 export default async function SchoolSettingsPage() {
   const session = await requirePermission('edit_settings');
@@ -19,43 +20,44 @@ export default async function SchoolSettingsPage() {
       </div>
 
       <Card>
-        <ActionForm action={updateSchoolProfile} submitLabel="Save changes">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="col-span-2">
-              <Label htmlFor="name">School name</Label>
-              <Input id="name" name="name" defaultValue={school?.name} required />
-            </div>
-            <div className="col-span-2">
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" name="address" defaultValue={school?.address ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="region">Region</Label>
-              <Input id="region" name="region" defaultValue={school?.region ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="district">District</Label>
-              <Input id="district" name="district" defaultValue={school?.district ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" defaultValue={school?.phone ?? ''} />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" defaultValue={school?.email ?? ''} />
-            </div>
-            <div className="col-span-2">
-              <Label htmlFor="motto">School motto</Label>
-              <Input id="motto" name="motto" defaultValue={school?.motto ?? ''} />
-            </div>
+        <div className="space-y-6">
+          <SchoolLogoUpload logoUrl={session.school!.logoUrl} />
+          <div className="border-t border-border pt-5">
+            <ActionForm action={updateSchoolProfile} submitLabel="Save changes">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="col-span-2">
+                  <Label htmlFor="name">School name</Label>
+                  <Input id="name" name="name" defaultValue={school?.name} required />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input id="address" name="address" defaultValue={school?.address ?? ''} />
+                </div>
+                <div>
+                  <Label htmlFor="region">Region</Label>
+                  <Input id="region" name="region" defaultValue={school?.region ?? ''} />
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <Input id="district" name="district" defaultValue={school?.district ?? ''} />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" name="phone" defaultValue={school?.phone ?? ''} />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" defaultValue={school?.email ?? ''} />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="motto">School motto</Label>
+                  <Input id="motto" name="motto" defaultValue={school?.motto ?? ''} />
+                </div>
+              </div>
+            </ActionForm>
           </div>
-        </ActionForm>
+        </div>
       </Card>
-
-      <p className="help-text">
-        The school logo is set once during registration and can be updated here when your document workflow is configured.
-      </p>
     </div>
   );
 }

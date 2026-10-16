@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 export async function loadStudentReports(schoolId: string, classId?: string, examinationId?: string, options?: { streamId?: string; gender?: string; educationLevelId?: string; academicYearId?: string; term?: string }) {
   const supabase = await createServerSupabaseClient();
   const [{ data: school }, { data: academicYears }, { data: classes }, { data: allExaminations }] = await Promise.all([
-    supabase.from('schools').select('name, address, region, district, phone, email, motto').eq('id', schoolId).maybeSingle(),
+    supabase.from('schools').select('name, address, region, district, phone, email, motto, logo_path').eq('id', schoolId).maybeSingle(),
     supabase.from('academic_years').select('id, name').eq('school_id', schoolId).order('start_date', { ascending: false }),
     supabase.from('classes').select('id, name, education_level_id').eq('school_id', schoolId).order('order_index').order('name'),
     supabase.from('examinations').select('id, name, term, status, academic_year_id, academic_years(id, name)').eq('school_id', schoolId).order('created_at', { ascending: false }),
