@@ -1,8 +1,8 @@
 {
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/dashboard/syllabus/page": "app/dashboard/syllabus/page.js",
   "/dashboard/exams/class-results/page": "app/dashboard/exams/class-results/page.js",
-  "/dashboard/syllabus/topics/page": "app/dashboard/syllabus/topics/page.js",
-  "/dashboard/exams/reports/page": "app/dashboard/exams/reports/page.js",
-  "/dashboard/exams/results/page": "app/dashboard/exams/results/page.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/dashboard/syllabus/class/page": "app/dashboard/syllabus/class/page.js",
+  "/dashboard/exams/results/page": "app/dashboard/exams/results/page.js",
+  "/dashboard/syllabus/page": "app/dashboard/syllabus/page.js",
+  "/dashboard/syllabus/topics/page": "app/dashboard/syllabus/topics/page.js"
 }
