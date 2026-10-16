@@ -7,7 +7,7 @@ export async function loadStudentReports(schoolId: string, classId?: string, exa
   const [{ data: school }, { data: academicYears }, { data: classes }, { data: allExaminations }] = await Promise.all([
     supabase.from('schools').select('name, address, region, district, phone, email, motto').eq('id', schoolId).maybeSingle(),
     supabase.from('academic_years').select('id, name').eq('school_id', schoolId).order('start_date', { ascending: false }),
-    supabase.from('classes').select('id, name').eq('school_id', schoolId).order('order_index').order('name'),
+    supabase.from('classes').select('id, name, education_level_id').eq('school_id', schoolId).order('order_index').order('name'),
     supabase.from('examinations').select('id, name, term, status, academic_year_id, academic_years(id, name)').eq('school_id', schoolId).order('created_at', { ascending: false }),
   ]);
   const yearExists = academicYears?.some((year) => year.id === options?.academicYearId);
@@ -16,7 +16,10 @@ export async function loadStudentReports(schoolId: string, classId?: string, exa
   const termOptions = [...new Set(yearExaminations.map((exam: any) => exam.term))].sort((left, right) => left.localeCompare(right));
   const selectedTerm = termOptions.includes(options?.term ?? '') ? options?.term : undefined;
   const examinationOptions = yearExaminations.filter((exam: any) => !selectedTerm || exam.term === selectedTerm);
-  const examinations = examinationOptions.filter((exam: any) => !examinationId || exam.id === examinationId);
+  const selectedExaminationId = examinationOptions.some((exam: any) => exam.id === examinationId) ? examinationId : undefined;
+  const examinations = selectedExaminationId
+    ? examinationOptions.filter((exam: any) => exam.id === selectedExaminationId)
+    : examinationOptions;
 
   let studentsQuery = supabase
     .from('students')
@@ -35,7 +38,7 @@ export async function loadStudentReports(schoolId: string, classId?: string, exa
   }));
   const studentIds = normalizedStudents.map((student: any) => student.id);
 
-  if (!studentIds.length || !examinations.length) return { school, academicYears: academicYears ?? [], classes: classes ?? [], examinations, examinationOptions, termOptions, selectedYearId, selectedTerm, selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: [], marks: [], results: [], streams: [] };
+  if (!studentIds.length || !examinations.length) return { school, academicYears: academicYears ?? [], classes: classes ?? [], examinations, examinationOptions, termOptions, selectedYearId, selectedTerm, selectedExaminationId, selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: [], marks: [], results: [], streams: [] };
   const examinationIds = examinations.map((exam: any) => exam.id);
 
   const [{ data: marks }, { data: results }] = await Promise.all([
@@ -75,5 +78,5 @@ export async function loadStudentReports(schoolId: string, classId?: string, exa
     incompleteResults.set(key, current);
   }
   const allResults = [...(results ?? []), ...incompleteResults.values()];
-  return { school, academicYears: academicYears ?? [], classes: classes ?? [], examinations, examinationOptions, termOptions, selectedYearId, selectedTerm, selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: normalizedStudents, marks: marks ?? [], results: allResults, streams: [] };
+  return { school, academicYears: academicYears ?? [], classes: classes ?? [], examinations, examinationOptions, termOptions, selectedYearId, selectedTerm, selectedExaminationId, selectedClass: (classes ?? []).find((item: any) => item.id === classId) ?? null, students: normalizedStudents, marks: marks ?? [], results: allResults, streams: [] };
 }

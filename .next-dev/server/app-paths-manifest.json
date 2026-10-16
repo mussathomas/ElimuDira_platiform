@@ -1,5 +1,8 @@
 {
-  "/page": "app/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/dashboard/exams/class-results/page": "app/dashboard/exams/class-results/page.js",
+  "/dashboard/students/page": "app/dashboard/students/page.js",
+  "/dashboard/students/transfers/page": "app/dashboard/students/transfers/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/exams/marks/page": "app/dashboard/exams/marks/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js"
 }

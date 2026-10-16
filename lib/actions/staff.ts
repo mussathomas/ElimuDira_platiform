@@ -19,10 +19,14 @@ const staffSchema = z.object({
 const staffUpdateSchema = staffSchema.omit({ password: true }).extend({
   staff_id: z.string().uuid(),
   password: z.string().min(8).optional().or(z.literal('')),
+  role_id: z.string().uuid().optional().or(z.literal('')),
 });
 
 export async function createStaffAccount(formData: FormData): Promise<ActionResult> {
   const session = await requirePermission('manage_staff');
+  if (!session.permissions.has('manage_users')) {
+    return { ok: false, error: 'Manage Users permission is required to assign a role to a new staff account.' };
+  }
   const parsed = staffSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the staff details.' };
 
@@ -85,10 +89,27 @@ export async function updateStaffAccount(formData: FormData): Promise<ActionResu
   const supabase = await createServerSupabaseClient();
   const { data: staff } = await supabase.from('staff_members').select('id, profile_id').eq('id', parsed.data.staff_id).eq('school_id', session.school!.id).maybeSingle();
   if (!staff) return { ok: false, error: 'Staff member not found in this school.' };
-  const { data: role } = await supabase.from('roles').select('id').eq('id', parsed.data.role_id).eq('school_id', session.school!.id).maybeSingle();
-  if (!role) return { ok: false, error: 'Choose a role belonging to this school.' };
+  const { data: profile, error: profileReadError } = await supabase.from('profiles')
+    .select('role_id').eq('id', staff.profile_id).eq('school_id', session.school!.id).maybeSingle();
+  if (profileReadError || !profile) return { ok: false, error: 'Unable to verify the staff member role.' };
+  let roleId = profile.role_id;
+  if (session.permissions.has('manage_users')) {
+    if (!parsed.data.role_id) return { ok: false, error: 'Choose a role belonging to this school.' };
+    const { data: role } = await supabase.from('roles').select('id')
+      .eq('id', parsed.data.role_id).eq('school_id', session.school!.id).maybeSingle();
+    if (!role) return { ok: false, error: 'Choose a role belonging to this school.' };
+    roleId = role.id;
+  } else if (parsed.data.role_id && parsed.data.role_id !== profile.role_id) {
+    return { ok: false, error: 'Manage Users permission is required to change a staff member role.' };
+  }
   const admin = createAdminSupabaseClient();
-  const { error: profileError } = await admin.from('profiles').update({ full_name: parsed.data.full_name, email: parsed.data.email, phone: parsed.data.phone || null, role_id: role.id }).eq('id', staff.profile_id).eq('school_id', session.school!.id);
+  const profileUpdate = {
+    full_name: parsed.data.full_name,
+    email: parsed.data.email,
+    phone: parsed.data.phone || null,
+    ...(session.permissions.has('manage_users') ? { role_id: roleId } : {}),
+  };
+  const { error: profileError } = await admin.from('profiles').update(profileUpdate).eq('id', staff.profile_id).eq('school_id', session.school!.id);
   if (profileError) return { ok: false, error: 'Unable to update the staff profile.' };
   const { error: staffError } = await admin.from('staff_members').update({ employee_number: parsed.data.employee_number, position: parsed.data.position || null }).eq('id', staff.id).eq('school_id', session.school!.id);
   if (staffError) return { ok: false, error: staffError.code === '23505' ? 'That employee number already exists.' : 'Unable to update the staff record.' };

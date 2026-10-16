@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { requirePermission } from '@/lib/permissions/session';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Select } from '@/components/ui/field';
 import { loadStudentReports } from '@/lib/reports/student-reports';
 import { ActionForm } from '@/components/ui/action-form';
@@ -10,10 +10,10 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const session = await requirePermission('download_reports');
   const params = await searchParams;
   const data = await loadStudentReports(session.school!.id, params.class_id, params.examination_id, { academicYearId: params.academic_year_id, term: params.term });
-  const pdfParams = new URLSearchParams(); if (data.selectedYearId) pdfParams.set('academic_year_id', data.selectedYearId); if (params.class_id) pdfParams.set('class_id', params.class_id); if (data.selectedTerm) pdfParams.set('term', data.selectedTerm); if (params.examination_id) pdfParams.set('examination_id', params.examination_id);
+  const pdfParams = new URLSearchParams(); if (data.selectedYearId) pdfParams.set('academic_year_id', data.selectedYearId); if (params.class_id) pdfParams.set('class_id', params.class_id); if (data.selectedTerm) pdfParams.set('term', data.selectedTerm); if (data.selectedExaminationId) pdfParams.set('examination_id', data.selectedExaminationId);
   const pdfHref = `/api/exams/reports/pdf${pdfParams.toString() ? `?${pdfParams}` : ''}`;
   const selectedYear = (data.academicYears as any[]).find((year) => year.id === data.selectedYearId);
-  const selectedExam = (data.examinations as any[]).find((exam) => exam.id === params.examination_id);
+  const selectedExam = (data.examinations as any[]).find((exam) => exam.id === data.selectedExaminationId);
   const resultsByStudent = new Map<string, any[]>();
   for (const result of data.results as any[]) resultsByStudent.set(result.student_id, [...(resultsByStudent.get(result.student_id) ?? []), result]);
   const marksByResult = new Map<string, any[]>();
