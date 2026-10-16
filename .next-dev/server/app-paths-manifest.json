@@ -1,4 +1,6 @@
 {
-  "/icon.svg/route": "app/icon.svg/route.js",
-  "/dashboard/exams/reports/page": "app/dashboard/exams/reports/page.js"
+  "/dashboard/exams/reports/page": "app/dashboard/exams/reports/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/staff/page": "app/dashboard/staff/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js"
 }

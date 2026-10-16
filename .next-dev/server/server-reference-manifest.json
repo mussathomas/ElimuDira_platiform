@@ -77,6 +77,58 @@
       },
       "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\exams.ts",
       "exportedName": "saveMarksBulk"
+    },
+    "400c898e4bf1e04ad82b1802fb2b43ada7d76aa999": {
+      "workers": {
+        "app/dashboard/staff/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%2C%5B%7B%22id%22%3A%22400c898e4bf1e04ad82b1802fb2b43ada7d76aa999%22%2C%22exportedName%22%3A%22createStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%2C%7B%22id%22%3A%22405fdf3a6fca62a59d12dcc6444fab7b1af644d15d%22%2C%22exportedName%22%3A%22deleteStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%2C%7B%22id%22%3A%2240d63aed05ab5fd80914ddd50a472c6abb662a5d63%22%2C%22exportedName%22%3A%22updateStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/staff/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\staff.ts",
+      "exportedName": "createStaffAccount"
+    },
+    "405fdf3a6fca62a59d12dcc6444fab7b1af644d15d": {
+      "workers": {
+        "app/dashboard/staff/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%2C%5B%7B%22id%22%3A%22400c898e4bf1e04ad82b1802fb2b43ada7d76aa999%22%2C%22exportedName%22%3A%22createStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%2C%7B%22id%22%3A%22405fdf3a6fca62a59d12dcc6444fab7b1af644d15d%22%2C%22exportedName%22%3A%22deleteStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%2C%7B%22id%22%3A%2240d63aed05ab5fd80914ddd50a472c6abb662a5d63%22%2C%22exportedName%22%3A%22updateStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/staff/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\staff.ts",
+      "exportedName": "deleteStaffAccount"
+    },
+    "40d63aed05ab5fd80914ddd50a472c6abb662a5d63": {
+      "workers": {
+        "app/dashboard/staff/page": {
+          "moduleId": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%2C%5B%7B%22id%22%3A%22400c898e4bf1e04ad82b1802fb2b43ada7d76aa999%22%2C%22exportedName%22%3A%22createStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%2C%7B%22id%22%3A%22405fdf3a6fca62a59d12dcc6444fab7b1af644d15d%22%2C%22exportedName%22%3A%22deleteStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%2C%7B%22id%22%3A%2240d63aed05ab5fd80914ddd50a472c6abb662a5d63%22%2C%22exportedName%22%3A%22updateStaffAccount%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Cstaff.ts%22%7D%5D%5D%5D&__client_imported__=!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/staff/page": "rsc"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\staff.ts",
+      "exportedName": "updateStaffAccount"
+    },
+    "6013565d9b3216337b216948815c4c508f4e2e028c": {
+      "workers": {
+        "app/(auth)/login/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Clogin.ts%22%2C%5B%7B%22id%22%3A%226013565d9b3216337b216948815c4c508f4e2e028c%22%2C%22exportedName%22%3A%22loginUser%22%2C%22filename%22%3A%22..%2FC%3A%5C%5CUsers%5C%5Cmussa%5C%5CDesktop%5C%5Celimudira%5C%5Celimudira%5C%5Clib%5C%5Cactions%5C%5Clogin.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/(auth)/login/page": "action-browser"
+      },
+      "filename": "../C:\\Users\\mussa\\Desktop\\elimudira\\elimudira\\lib\\actions\\login.ts",
+      "exportedName": "loginUser"
     }
   },
   "edge": {},
